@@ -73,8 +73,6 @@ The application uses the following environment variables, which should be define
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `cache`                                  | ✘        |
 
-_Note that the channels refresh on each run, and timer (probably) only XMLTV data is capped at the refresh interval for now._
-
 ### Discord Bot Data
 
 The reason we have a `bot` and a `user` token is because the bot token is used to connect to the Discord API, while the user token is used to join the voice channel and stream video.

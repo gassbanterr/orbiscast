@@ -48,7 +48,7 @@ You can check the available tags on the [Docker Hub page](https://hub.docker.com
 
 ### Manual
 
-_The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required to run the bot manually._
+_The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required. You can install it following the instructions on the website._
 
 The project can also be run manually. To do so, first download the project and install the dependencies:
 
@@ -77,7 +77,7 @@ The application uses the following environment variables, which should be define
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
 | `DEFAULT_STREAM_TIME` | Default stream time in minutes.               | `120`                                    | ✘        |
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
-| `CACHE_DIR`        | Directory for cache storage.                     | `cache`                                  | ✘        |
+| `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                                  | ✘        |
 
 ### Discord Bot Data
 

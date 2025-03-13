@@ -24,6 +24,7 @@ You will need to set a few things up before you can run the bot:
   - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Get the bot and the user on your desired server.
   - The user has to manually join the server.
+  - The bot can be added following the portal instructions linked above.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
 _Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should._

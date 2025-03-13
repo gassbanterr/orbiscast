@@ -1,6 +1,12 @@
 # Orbiscast
 
-Orbiscast is a Discord bot that streams IPTV channels to a voice channel. It can be controlled by users in a text channel. It was created to allow users to watch TV together in a voice channel.
+**Orbiscast** is a Discord bot that streams IPTV channels. It can be controlled by users with discord commands specified at the end of this document.
+
+This tool was made to simplify watch parties with friends, as it allows you to stream IPTV channels directly to Discord. It is also useful for testing IPTV channels without the need for a dedicated IPTV player.
+
+This tool is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
+
+_I am not responsible for any misuse of this tool. Use at your own risk._
 
 ## Installation
 
@@ -8,12 +14,16 @@ Orbiscast is a Discord bot that streams IPTV channels to a voice channel. It can
 
 You will need to set a few things up before you can run the bot:
 
-- Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications).
-- Get the [bot token](https://discord.com/developers/docs/topics/oauth2) and user token.
+
+- **Note**: Do not share any of the tokens mentioned below with anyone. If you do, regenerate them immediately.
+- Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
+  - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
+- Get the user token from the Discord web client.
   - The user token is required to join the voice channel and stream video. It is recommended to use a secondary account for this purpose.
-  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd). I apologize if the links are broken, but Google is your friend.
-  - **Note**: Do not share your bot or user token with anyone. If you do, regenerate them immediately.
+  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd). 
+  - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Get the bot and the user on your desired server.
+  - The user has to manually join the server.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
 _Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should._
@@ -40,20 +50,15 @@ You can check the available tags on the [Docker Hub page](https://hub.docker.com
 
 _The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required to run the bot manually._
 
-The project can also be run manually. To do so, first download the project:
+The project can also be run manually. To do so, first download the project and install the dependencies:
 
 ```bash
 git clone https://github.com/zbejas/orbiscast
-```
-
-then, install the dependencies:
-
-```bash
 cd orbiscast
 bun install
 ```
 
-then, run the bot:
+Start the bot using:
 
 ```bash
 bun run start
@@ -100,4 +105,4 @@ The bot can be controlled using the following commands in the text channel:
 - `/join`: Join a voice channel.
 - `/leave`: Leave the voice channel.
 
-_Note that the available channels will be shown when tab-completing the channel name._
+_The available channels will be shown when tab-completing the channel name._

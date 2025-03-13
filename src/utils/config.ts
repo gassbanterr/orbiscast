@@ -53,7 +53,7 @@ class Config {
         });
 
         if (!this.REFRESH_IPTV) {
-            this.REFRESH_IPTV = 120;
+            this.REFRESH_IPTV = 1440;
             logger.info(`REFRESH_IPTV environment variable not set, defaulting to ${this.REFRESH_IPTV} minutes`);
         }
         if (!this.DEFAULT_STREAM_TIME) {

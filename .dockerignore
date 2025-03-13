@@ -36,6 +36,7 @@ compose.build.yml
 .idea
 .vscode
 
-# Data
+# Data and cache 
 data
+cache
 

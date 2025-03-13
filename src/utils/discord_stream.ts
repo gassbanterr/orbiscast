@@ -9,8 +9,6 @@ const logger = getLogger();
 const streamer = new Streamer(new Client());
 let abortController = new AbortController();
 let ffmpegCommand: ffmpeg.FfmpegCommand | null = null;
-let currentPlayingUrl = '';
-let isStreaming = false;
 
 export async function initializeStreamer() {
     if (streamer.client.isReady()) {
@@ -64,8 +62,6 @@ export async function startStreaming(videoUrl: string, duration: number) {
     }
 
     try {
-        currentPlayingUrl = videoUrl;
-
         const { command, output } = prepareStream(videoUrl, {
             noTranscoding: false,
             minimizeLatency: true,
@@ -92,16 +88,6 @@ export async function startStreaming(videoUrl: string, duration: number) {
         await playStream(output, streamer, {
             type: "go-live",
         }, abortController.signal);
-
-        // Since the above promise resolves when the stream is stopped, we can assume the stream has stopped
-        logger.info(`Stream ${videoUrl} was stopped.`);
-        /*
-        if (currentPlayingUrl !== videoUrl && currentPlayingUrl !== '') {
-            logger.info('Stupid thing killed new stream. Retrying...');
-            logger.debug(`Retrying stream ${videoUrl}`);
-            await startStreaming(currentPlayingUrl, duration);
-        }
-        */
     } catch (error) {
         logger.error(`Error starting stream: ${error}`);
         await stopStreaming();
@@ -111,11 +97,6 @@ export async function startStreaming(videoUrl: string, duration: number) {
 export async function stopStreaming() {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
-        return;
-    }
-
-    if (!currentPlayingUrl) {
-        logger.error('No stream is currently in progress');
         return;
     }
 

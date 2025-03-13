@@ -62,7 +62,7 @@ class Config {
         }
         if (!this.DEBUG) {
             this.DEBUG = false;
-            logger.info(`DEBUG environment variable not set, defaulting to ${this.DEBUG}`);
+            logger.info(`DEBUG environment variable not set or set to false, defaulting to ${this.DEBUG}`);
         }
         if (!this.CACHE_DIR) {
             this.CACHE_DIR = '/dev/shm/orbiscast';

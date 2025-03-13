@@ -36,5 +36,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Build compose file
 compose.build.yml
 
-# Data folder
+# Data and cache folder
 data
+cache

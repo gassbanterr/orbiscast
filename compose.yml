@@ -1,0 +1,9 @@
+services:
+  orbiscast:
+    image: docker.io/zbejas/orbiscast:dev
+    container_name: orbiscast
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env

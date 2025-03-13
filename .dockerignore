@@ -1,0 +1,41 @@
+# Node modules
+node_modules
+
+# Bun cache
+.bun
+
+# Logs
+logs
+*.log
+
+# dotenv environment variable files
+.env
+.env.*
+
+# Output directories
+out
+dist
+
+# Coverage directory
+coverage
+
+# Temporary files
+*.tmp
+*.swp
+
+# Docker files
+Dockerfile
+compose.yml
+compose.build.yml
+
+# Git
+.git
+.gitignore
+
+# IDE configurations
+.idea
+.vscode
+
+# Data
+data
+

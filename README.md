@@ -49,6 +49,7 @@ git clone https://github.com/zbejas/orbiscast
 then, install the dependencies:
 
 ```bash
+cd orbiscast
 bun install
 ```
 

@@ -21,7 +21,7 @@ const logger = createLogger({
         format.printf(({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}] ${message}`)
     ),
     transports: [
-        new transports.File({ filename: logFile }),
+        new transports.File({ filename: logFile, maxsize: 10485760, maxFiles: 5 }),
         new transports.Console()
     ]
 });

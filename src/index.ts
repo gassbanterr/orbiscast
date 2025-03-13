@@ -6,9 +6,6 @@ import { initializeStreamer, joinVoiceChannel, startStreaming } from './utils/di
 
 const logger = getLogger();
 
-// Log debug status
-logger.info(`Debug mode is ${config.DEBUG ? 'on' : 'off'}`);
-
 // Initialize the streamer
 initializeStreamer().then(() => {
     // Download and cache the playlist

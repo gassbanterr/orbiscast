@@ -186,7 +186,17 @@ client.on('interactionCreate', async interaction => {
         const current = options.getFocused();
         const channelEntries = await getChannelEntries();
         const choices = channelEntries.map(entry => entry.tvg_name).filter((name): name is string => name !== undefined && name.toLowerCase().includes(current.toLowerCase()));
-        await interaction.respond(choices.map(choice => ({ name: choice!, value: choice! })));
+
+        // Split choices into chunks of 25 items
+        const chunks = [];
+        for (let i = 0; i < choices.length; i += 25) {
+            chunks.push(choices.slice(i, i + 25));
+        }
+
+        // Respond with the first chunk of choices
+        if (chunks[0]) {
+            await interaction.respond(chunks[0].map(choice => ({ name: choice!, value: choice! })));
+        }
     }
 });
 

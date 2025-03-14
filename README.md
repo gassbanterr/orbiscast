@@ -106,4 +106,4 @@ The bot can be controlled using the following commands in the text channel:
 - `/join`: Join a voice channel.
 - `/leave`: Leave the voice channel.
 
-_The available channels will be shown when tab-completing the channel name._
+_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time. If you have more than 25 channels, you will have to type the channel name manually. The channel name is case-insensitive. This is a limitation of the Discord API._

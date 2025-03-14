@@ -14,7 +14,7 @@ The bot was made to simplify watch parties with friends. It is also useful for t
 
 This project is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
 
-_I am not responsible for any misuse of this tool. Use at your own risk._
+_I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only._
 
 ## Installation
 

@@ -60,6 +60,8 @@ client.once('ready', async () => {
             new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
             new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
             new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
+            new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
+                .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
         ].map(command => command.toJSON());
 
         try {
@@ -174,6 +176,23 @@ client.on('interactionCreate', async interaction => {
             logger.error(`Error leaving voice channel: ${error}`);
             await interaction.reply(`Error leaving voice channel: ${error}`);
         }
+    } else if (commandName === 'list') {
+        const page = (interaction.options as CommandInteractionOptionResolver).getInteger('page') || 1;
+        const channelEntries = await getChannelEntries();
+        const itemsPerPage = 25;
+        const totalPages = Math.ceil(channelEntries.length / itemsPerPage);
+
+        if (page < 1 || page > totalPages) {
+            await interaction.reply(`Invalid page number. Please provide a number between 1 and ${totalPages}.`);
+            return;
+        }
+
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const channelsToDisplay = channelEntries.slice(start, end);
+
+        const channelList = channelsToDisplay.map((channel, index) => `${start + index + 1}. ${channel.tvg_name || 'Unknown'}`).join('\n');
+        await interaction.reply(`**Channels (Page ${page}/${totalPages}):**\n${channelList}`);
     }
 });
 

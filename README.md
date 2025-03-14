@@ -8,7 +8,7 @@
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
 
-**OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with commands specified at the end of this document.
+**OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with [commands](#commands) specified at the end of this document.
 
 The bot was made to simplify watch parties with friends. It is also useful for testing IPTV channels without the need for a dedicated IPTV player.
 
@@ -22,7 +22,7 @@ _I am not responsible for any misuse of this tool. Ensure to comply with all app
 
 You will need to set a few things up before you can run the bot:
 
-- **Note**: Do not share any of the tokens mentioned below with anyone. If you do, regenerate them immediately.
+- **Note**: Do not share any of the tokens [mentioned below](#discord-bot-data) with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
 - Get the user token from the Discord web client.
@@ -121,6 +121,7 @@ The bot can be controlled using the following commands in the text channel:
 
 - `/stream <channel_name> <length>`: Start streaming the specified channel. Length is in minutes.
 - `/stop`: Stop the current stream.
+- `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
 - `/join`: Join a voice channel.
 - `/leave`: Leave the voice channel.
 

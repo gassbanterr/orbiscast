@@ -11,9 +11,9 @@ initializeStreamer().then(() => {
     // Download and cache the playlist
     downloadCacheAndFillDb().then(() => {
         // Run the bot
-        logger.info('Attempting to log in Orbiscast...');
+        logger.info('Attempting to log in OrbisCast...');
         client.login(config.BOT_TOKEN).then(() => {
-            logger.info('Orbiscast logged in successfully');
+            logger.info('OrbisCast logged in successfully');
         }).catch((err: any) => {
             logger.error(`Error logging in: ${err}`);
         });

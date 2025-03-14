@@ -12,7 +12,7 @@ export const client = new Client({
 });
 
 client.once('ready', async () => {
-    logger.info(`Orbiscast connected as ${client.user?.tag}`);
+    logger.info(`OrbisCast connected as ${client.user?.tag}`);
 
     // Log the GUILD ID being used
     logger.info(`Attempting to connect to GUILD ID: ${config.GUILD}`);

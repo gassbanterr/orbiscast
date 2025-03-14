@@ -10,7 +10,7 @@
 
 **OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with commands specified at the end of this document.
 
-The bot was made to simplify watch parties with friends, as it allows you to stream IPTV channels directly to Discord. It is also useful for testing IPTV channels without the need for a dedicated IPTV player.
+The bot was made to simplify watch parties with friends. It is also useful for testing IPTV channels without the need for a dedicated IPTV player.
 
 This project is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
 

@@ -1,14 +1,12 @@
-# Use the official Ubuntu base image
-FROM ubuntu:latest
+# Use the official Alpine base image
+FROM alpine:latest
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
-RUN apt-get update && \
-    apt-get install -y curl git unzip ffmpeg build-essential && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add --no-cache curl git unzip ffmpeg build-base bash
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash
@@ -24,6 +22,9 @@ COPY . .
 
 # Install project dependencies
 RUN bun install
+
+# Set COMPOSE_BAKE environment variable
+ENV COMPOSE_BAKE=true
 
 # Command to run the application
 CMD ["bun", "run", "start"]

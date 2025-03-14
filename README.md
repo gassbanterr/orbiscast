@@ -1,13 +1,11 @@
 # OrbisCast
 
-![GitHub issues](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/docker-image.yml
-)
-![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)
-![GitHub](https://img.shields.io/github/license/zbejas/orbiscast)
-![GitHub last commit](https://img.shields.io/github/last-commit/zbejas/orbiscast)
-![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)
-
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/docker-image.yml)](https://github.com/zbejas/orbiscast/actions/workflows/docker-image.yml)
+[![GitHub last commit](https://img.shields.io/github/last-commit/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/pulls)
+[![GitHub license](https://img.shields.io/github/license/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/blob/main/LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
 
 **OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with commands specified at the end of this document.
 
@@ -22,7 +20,6 @@ _I am not responsible for any misuse of this tool. Use at your own risk._
 ### Before you start
 
 You will need to set a few things up before you can run the bot:
-
 
 - **Note**: Do not share any of the tokens mentioned below with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.

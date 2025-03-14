@@ -51,25 +51,23 @@ client.once('ready', async () => {
         await sendMessage(textChannel.id, `**${client.user?.username} is now connected.** *You can disable this message by setting DEBUG to false.*`);
     }
 
-    if (config.DEBUG) {
-        const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
-        const commands = [
-            new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
-                .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true))
-                .addIntegerOption(option => option.setName('length').setDescription('The length of time to stream the channel (in minutes)')),
-            new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
-            new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
-            new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
-            new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
-                .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
-        ].map(command => command.toJSON());
+    const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
+    const commands = [
+        new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
+            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true))
+            .addIntegerOption(option => option.setName('length').setDescription('The length of time to stream the channel (in minutes)')),
+        new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
+        new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
+        new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
+        new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
+            .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
+    ].map(command => command.toJSON());
 
-        try {
-            await rest.put(Routes.applicationGuildCommands(client.user!.id, guild.id), { body: commands });
-            logger.info('Successfully registered application commands.');
-        } catch (error) {
-            logger.error(`Error registering application commands: ${error}`);
-        }
+    try {
+        await rest.put(Routes.applicationGuildCommands(client.user!.id, guild.id), { body: commands });
+        logger.info('Successfully registered application commands.');
+    } catch (error) {
+        logger.error(`Error registering application commands: ${error}`);
     }
 });
 

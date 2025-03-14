@@ -27,7 +27,7 @@ You will need to set a few things up before you can run the bot:
   - The bot can be added following the portal instructions linked above.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
-_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should._
+_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it data._
 
 ### Docker
 

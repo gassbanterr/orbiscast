@@ -46,10 +46,6 @@ client.once('ready', async () => {
     }
 
     logger.info(`Connected to text channel: ${textChannel.name}`);
-    if (config.DEBUG) {
-        logger.debug(`Sending debug message to text channel ${textChannel.name} (${config.DEFAULT_TEXT_CHANNEL})`);
-        await sendMessage(textChannel.id, `**${client.user?.username} is now connected.** *You can disable this message by setting DEBUG to false.*`);
-    }
 
     const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
     const commands = [
@@ -189,7 +185,7 @@ client.on('interactionCreate', async interaction => {
         const end = start + itemsPerPage;
         const channelsToDisplay = channelEntries.slice(start, end);
 
-        const channelList = channelsToDisplay.map((channel, index) => `${start + index + 1}. ${channel.tvg_name || 'Unknown'}`).join('\n');
+        const channelList = channelsToDisplay.map(channel => `- \`${channel.tvg_name || 'Unknown'}\``).join('\n');
         await interaction.reply(`**Channels (Page ${page}/${totalPages}):**\n${channelList}`);
     }
 });
@@ -217,16 +213,7 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-async function sendMessage(channelName: string, message: string) {
-    const channel = client.channels.cache.get(channelName.toString());
-    if (channel instanceof TextChannel || channel instanceof NewsChannel) {
-        await channel.send(message);
-        logger.info(`Sent message to channel ${channelName}`);
-        logger.debug(`Message: ${message}`);
-    } else {
-        logger.error(`Channel ${channelName} not found`);
-    }
-}
+
 
 client.login(config.BOT_TOKEN).catch(err => {
     logger.error(`Error logging in: ${err}`);

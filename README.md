@@ -33,21 +33,32 @@ You will need to set a few things up before you can run the bot:
   - The bot can be added following the portal instructions linked above.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
-_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it data._
+_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data._
 
 ### Docker
 
-In the repo is a provided `compose.yml` file that can be used to run the bot in a Docker container. The bot can be run using the following command:
+In the repo is a provided `compose.yml` file that can be used to run the bot.
+Download the file and fill in the required environment variables or create a `.env` file in the same directory as the `compose.yml` file.
+
+Then, run the following command to start the bot:
 
 ```bash
 docker compose up
 ```
 
-or
+or to run it in the background:
 
 ```bash
 docker compose up -d
 ```
+
+You can check the logs using:
+
+```bash
+docker compose logs -f
+``` 
+
+_The `-f` flag is optional and is used to follow the logs._
 
 All of the app data is stored in `/app/data`. The cache is stored in `/app/cache` or RAM, depending on the `RAM_CACHE` and `CACHE_DIR` environment variables.
 

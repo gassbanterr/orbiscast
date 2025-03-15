@@ -96,8 +96,7 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
     }
 
     if (isNaN(duration) || duration <= 0) {
-        logger.error('Invalid duration specified for streaming');
-        return;
+        duration = config.DEFAULT_STREAM_TIMEOUT;
     }
 
     try {

@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { getLogger } from './logger';
 import { config } from './config';
-import { getChannelEntries } from './database';
-import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
+import { getChannelEntries } from '../modules/database';
+import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand, handleProgrammeCommand } from '../modules/commands';
 
 const logger = getLogger();
 export const client = new Client({
@@ -52,6 +52,8 @@ client.once('ready', async () => {
                     { name: 'channels', value: 'channels' },
                     { name: 'programme', value: 'programme' }
                 )),
+        new SlashCommandBuilder().setName('programme').setDescription('Show programme guide for a channel')
+            .addStringOption(option => option.setName('channel').setDescription('The channel name').setAutocomplete(true).setRequired(true)),
     ].map(command => command.toJSON());
 
     try {
@@ -73,11 +75,13 @@ client.on('interactionCreate', async interaction => {
             await handleListCommand(interaction);
         } else if (commandName === 'refresh') {
             await handleRefreshCommand(interaction);
+        } else if (commandName === 'programme') {
+            await handleProgrammeCommand(interaction);
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;
 
-        if (commandName === 'stream') {
+        if (commandName === 'stream' || commandName === 'programme') {
             const current = options.getFocused();
             const channelEntries = await getChannelEntries();
             const choices = channelEntries.map(entry => entry.tvg_name).filter((name): name is string => name !== undefined && name.toLowerCase().includes(current.toLowerCase()));

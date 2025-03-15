@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
 import { getLogger } from '../../utils/logger';
-import { getChannelEntries } from '../../utils/database';
+import { getChannelEntries } from '../../modules/database';
 
 const logger = getLogger();
 

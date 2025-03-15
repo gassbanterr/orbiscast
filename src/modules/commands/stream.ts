@@ -1,9 +1,9 @@
 import { CommandInteraction, GuildMember } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
-import { getChannelEntries } from '../../utils/database';
+import { getChannelEntries } from '../../modules/database';
 import { getVoiceConnection } from '@discordjs/voice';
-import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../utils/discord_stream';
+import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import type { ChannelEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();

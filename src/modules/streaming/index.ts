@@ -1,15 +1,14 @@
 import { Client } from "discord.js-selfbot-v13";
 import { Streamer } from '@dank074/discord-video-stream';
 import { prepareStream, playStream, Utils } from "@dank074/discord-video-stream";
-import { getLogger } from './logger';
-import { config } from './config';
+import { getLogger } from '../../utils/logger';
+import { config } from '../../utils/config';
 import ffmpeg from 'fluent-ffmpeg';
-import type { ChannelEntry } from '../interfaces/iptv';
+import type { ChannelEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
 const streamer = new Streamer(new Client());
 let abortController = new AbortController();
-let ffmpegCommand: ffmpeg.FfmpegCommand | null = null;
 let currentChannelEntry: ChannelEntry | null = null;
 let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
 let streamAloneTime: number = 0;
@@ -149,7 +148,6 @@ export async function startStreaming(channelEntry: ChannelEntry) {
             h26xPreset: "veryfast",
         }, abortController.signal);
 
-        ffmpegCommand = command;
         currentChannelEntry = channelEntry;
 
         command.on("error", async (err: any, _stdout: any, _stderr: any) => {

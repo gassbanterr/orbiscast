@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
 import { getLogger } from '../../utils/logger';
-import { downloadCacheAndFillDb, fillDbChannels, fillDbProgrammes } from '../../utils/database';
+import { downloadCacheAndFillDb, fillDbChannels, fillDbProgrammes } from '../../modules/iptv';
 
 const logger = getLogger();
 

@@ -1,6 +1,6 @@
 import { CommandInteraction } from 'discord.js';
 import { getLogger } from '../../utils/logger';
-import { leaveVoiceChannel, stopStreaming } from '../../utils/discord_stream';
+import { leaveVoiceChannel, stopStreaming } from '../../modules/streaming';
 
 const logger = getLogger();
 

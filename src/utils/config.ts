@@ -64,21 +64,16 @@ class Config {
         return allVarsSet;
     }
 
-    /**
-     * Returns a sanitized copy of the configuration with sensitive values obfuscated
-     */
     private getSanitizedConfig(): Record<string, any> {
         const sanitized = { ...this };
 
-        // Obfuscate URL values
         if (sanitized.PLAYLIST) {
-            sanitized.PLAYLIST = this.obfuscateString(sanitized.PLAYLIST);
+            sanitized.PLAYLIST = this.obfuscateString(sanitized.PLAYLIST, true);
         }
         if (sanitized.XMLTV) {
-            sanitized.XMLTV = this.obfuscateString(sanitized.XMLTV);
+            sanitized.XMLTV = this.obfuscateString(sanitized.XMLTV, true);
         }
 
-        // Obfuscate tokens
         if (sanitized.DISCORD_BOT_TOKEN) {
             sanitized.DISCORD_BOT_TOKEN = this.obfuscateString(sanitized.DISCORD_BOT_TOKEN);
         }
@@ -89,14 +84,9 @@ class Config {
         return sanitized;
     }
 
-    /**
-     * Obfuscates a string by replacing most characters with asterisks
-     */
-    private obfuscateString(input: string): string {
-        const length = input.length;
-        const visibleLength = Math.max(3, Math.floor(length / 2));
-        const obfuscated = input.slice(0, visibleLength).padEnd(length, '*');
-        return obfuscated;
+    private obfuscateString(input: string, full_obfucscation: boolean = false): string {
+        const obfuscationLength = full_obfucscation ? input.length : input.length - 4;
+        return '*'.repeat(obfuscationLength) + input.slice(obfuscationLength);
     }
 }
 

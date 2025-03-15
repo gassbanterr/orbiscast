@@ -1,11 +1,12 @@
 # OrbisCast
 
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/docker-image.yml)](https://github.com/zbejas/orbiscast/actions/workflows/docker-image.yml)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/main.yml?label=main%20build)](https://hub.docker.com/repository/docker/zbejas/orbiscast/tags)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/dev.yml?label=dev%20build)](https://hub.docker.com/repository/docker/zbejas/orbiscast/tags)
 [![GitHub last commit](https://img.shields.io/github/last-commit/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/pulls)
 [![GitHub license](https://img.shields.io/github/license/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/blob/main/LICENSE.md)
-[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
+[![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast?sort=date)](https://hub.docker.com/r/zbejas/orbiscast)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
 
 **OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with [commands](#commands) specified at the end of this document.

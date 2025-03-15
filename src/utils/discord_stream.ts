@@ -11,7 +11,6 @@ const streamer = new Streamer(new Client());
 let abortController = new AbortController();
 let ffmpegCommand: ffmpeg.FfmpegCommand | null = null;
 let currentChannelEntry: ChannelEntry | null = null;
-let streamTimeout: ReturnType<typeof setTimeout> | null = null;
 let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
 let streamAloneTime: number = 0;
 
@@ -89,14 +88,10 @@ export async function leaveVoiceChannel() {
     }
 }
 
-export async function startStreaming(channelEntry: ChannelEntry, duration: number) {
+export async function startStreaming(channelEntry: ChannelEntry) {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
         return;
-    }
-
-    if (isNaN(duration) || duration <= 0) {
-        duration = config.DEFAULT_STREAM_TIMEOUT;
     }
 
     try {
@@ -118,26 +113,12 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
 
         logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);
 
-        // Clear any existing timeout
-        if (streamTimeout) {
-            logger.debug('Clearing existing timeout');
-            clearTimeout(streamTimeout);
-            streamTimeout = null;
-        }
-
         // Clear any existing spectator monitor
         if (streamSpectatorMonitor) {
             logger.debug('Clearing existing spectator monitor');
             clearInterval(streamSpectatorMonitor);
             streamSpectatorMonitor = null;
         }
-
-        // Set a timer to disconnect the streamer after the specified duration
-        streamTimeout = setTimeout(async (): Promise<void> => {
-            await stopStreaming();
-            await leaveVoiceChannel();
-            logger.info(`Disconnected from the voice channel after ${duration} minutes`);
-        }, duration * 60 * 1000);
 
         // Start a spectator monitor
         streamSpectatorMonitor = setInterval(() => {
@@ -191,9 +172,10 @@ export async function stopStreaming() {
         logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
         currentChannelEntry = null;
         // Clear the timeout when stopping the stream
-        if (streamTimeout) {
-            clearTimeout(streamTimeout);
-            streamTimeout = null;
+        if (streamSpectatorMonitor) {
+            logger.debug('Clearing spectator monitor');
+            clearInterval(streamSpectatorMonitor);
+            streamSpectatorMonitor = null;
         }
     } catch (error) {
         logger.error(`Error stopping stream: ${error}`);

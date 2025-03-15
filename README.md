@@ -115,7 +115,7 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 
 The bot can be controlled using the following commands in the text channel:
 
-- `/stream <channel_name> <length>`: Start streaming the specified channel. Length is in minutes.
+- `/stream <channel_name>`: Start streaming the specified channel.
 - `/stop`: Stop the current stream.
 - `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
 - `/join`: Join a voice channel.

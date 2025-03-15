@@ -41,8 +41,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
-            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true))
-            .addIntegerOption(option => option.setName('length').setDescription('The length of time to stream the channel (in minutes)')),
+            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
         new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
         new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),

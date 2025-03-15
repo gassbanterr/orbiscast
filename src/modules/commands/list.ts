@@ -5,13 +5,21 @@ import { getChannelEntries } from '../../utils/database';
 const logger = getLogger();
 
 export async function handleListCommand(interaction: CommandInteraction) {
-    const page = interaction.options.get('page')?.value as number || 1;
+    const pageOption = interaction.options.get('page')?.value;
     const channelEntries = await getChannelEntries();
     const itemsPerPage = 25;
+
+    if (pageOption === 'all') {
+        const channelList = channelEntries.map(channel => `- \`${channel.tvg_name || 'Unknown'}\``).join('\n');
+        await interaction.reply(`**All Channels:**\n${channelList}`);
+        return;
+    }
+
+    const page = (pageOption as number) || 1;
     const totalPages = Math.ceil(channelEntries.length / itemsPerPage);
 
     if (page < 1 || page > totalPages) {
-        await interaction.reply(`Invalid page number. Please provide a number between 1 and ${totalPages}.`);
+        await interaction.reply(`Invalid page number. Please provide a number between 1 and ${totalPages}, or 'all' to list all channels.`);
         return;
     }
 

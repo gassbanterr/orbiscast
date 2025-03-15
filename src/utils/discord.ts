@@ -46,7 +46,7 @@ client.once('ready', async () => {
         new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
         new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
-            .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
+            .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),
         new SlashCommandBuilder().setName('refresh').setDescription('Refresh the specified data')
             .addStringOption(option => option.setName('type').setDescription('The type of data to refresh').setRequired(true)
                 .addChoices(

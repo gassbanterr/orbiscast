@@ -104,6 +104,7 @@ The application uses the following environment variables, which should be define
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
+| `TZ`               | Timezone for the container. Example: `Europe/Ljubljana`                      | `UTC`                                    | ✘        |
 
 ### Discord Configuration
 

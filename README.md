@@ -105,11 +105,11 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 
 | Variable              | Description                                      | Example/Default                          | Required |
 |-----------------------|--------------------------------------------------|------------------------------------------|----------|
-| `BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
+| `DISCORD_BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
 | `DISCORD_USER_TOKEN`  | Token for the Discord user.                      | `YOUR_USER_TOKEN_HERE`                   | ✔        |
 | `GUILD`               | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
 | `DEFAULT_TEXT_CHANNEL`| Default Discord text channel ID.                 | `000000000000000000`                     | ✔        |
-| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout in minutes.            | `10`                                     | ✘        |
+| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 
 ## Commands
 
@@ -118,8 +118,6 @@ The bot can be controlled using the following commands in the text channel:
 - `/stream <channel_name>`: Start streaming the specified channel.
 - `/stop`: Stop the current stream.
 - `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
-- `/join`: Join a voice channel.
-- `/leave`: Leave the voice channel.
 - `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".
 
 _The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time. If you have more than 25 channels, you will have to type the channel name manually. The channel name is case-sensitive. This is a limitation of the Discord API._

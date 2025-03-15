@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder 
 import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from './database';
-import { handleStreamCommand, handleStopCommand, handleJoinCommand, handleLeaveCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
+import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
 
 const logger = getLogger();
 export const client = new Client({
@@ -43,8 +43,6 @@ client.once('ready', async () => {
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
             .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
-        new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
-        new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
             .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),
         new SlashCommandBuilder().setName('refresh').setDescription('Refresh the specified data')
@@ -71,10 +69,6 @@ client.on('interactionCreate', async interaction => {
             await handleStreamCommand(interaction);
         } else if (commandName === 'stop') {
             await handleStopCommand(interaction);
-        } else if (commandName === 'join') {
-            await handleJoinCommand(interaction);
-        } else if (commandName === 'leave') {
-            await handleLeaveCommand(interaction);
         } else if (commandName === 'list') {
             await handleListCommand(interaction);
         } else if (commandName === 'refresh') {

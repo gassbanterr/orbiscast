@@ -3,6 +3,7 @@ FROM alpine:latest
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
 # Install dependencies
 RUN apk update && \

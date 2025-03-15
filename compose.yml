@@ -12,6 +12,9 @@ services:
     # environment:
     #   - PLAYLIST="http://example.com/m3u/playlist.m3u"
     #   - XMLTV="http://example.com/xmltv/guide.xml"
-    #   ... other required variables, see .env.example and README.md
+    # Timezone is optional, but recommended. If you don't set it, the container will use UTC
+    # Get the list of available timezones here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+    #   - TZ="Europe/Ljubljana"
+    # ... other required variables, see .env.example and README.md
     env_file:
       - .env

@@ -73,17 +73,25 @@ export async function joinVoiceChannel(guildId: string, channelId: string) {
         return;
     }
 
+    const guild = streamer.client.guilds.cache.get(guildId);
+    const channel = guild?.channels.cache.get(channelId);
+
+    if (!guild || !channel || !channel.isVoice()) {
+        logger.error('Invalid guild or channel ID.');
+        return;
+    }
+
     const connection = streamer.voiceConnection;
     if (connection && connection.channelId === channelId) {
-        logger.debug(`Already connected to voice channel: ${channelId} in guild: ${guildId}`);
+        logger.debug(`Already connected to voice channel: ${channel.name} in guild: ${guild.name}`);
         return;
     }
     try {
         let response = await streamer.joinVoice(guildId, channelId);
         if (response.ready) {
-            logger.info(`Connected to voice channel: ${channelId} in guild: ${guildId}`);
+            logger.info(`Connected to voice channel: ${channel.name} in guild: ${guild.name}`);
         } else {
-            logger.error(`Failed to connect to voice channel: ${channelId} in guild: ${guildId}`);
+            logger.error(`Failed to connect to voice channel: ${channel.name} in guild: ${guild.name}`);
         }
     } catch (error) {
         logger.error(`Error joining voice channel: ${error}`);
@@ -102,8 +110,12 @@ export async function leaveVoiceChannel() {
         if (currentChannelEntry) {
             await stopStreaming();
         }
+        const guildId = streamer.voiceConnection?.guildId;
+        const channelId = streamer.voiceConnection?.channelId;
+        const guild = guildId ? streamer.client.guilds.cache.get(guildId) : undefined;
+        const channel = guild && channelId ? guild.channels.cache.get(channelId) : undefined;
         streamer.leaveVoice();
-        logger.info('Stopped video stream and disconnected from the voice channel');
+        logger.info(`Stopped video stream and disconnected from the voice channel: ${channel?.name || 'unknown'} in guild: ${guild?.name || 'unknown'}`);
     } catch (error) {
         logger.error(`Error leaving voice channel: ${error}`);
     }

@@ -108,7 +108,9 @@ export async function startStreaming(channelEntry: ChannelEntry) {
         currentChannelEntry = channelEntry;
 
         command.on("error", async (err: any, _stdout: any, _stderr: any) => {
-            logger.error(`FFmpeg error: ${err}`);
+            if (!err.toString().includes('ffmpeg exited with code 255')) {
+                logger.error(`FFmpeg ${err}`);
+            }
         });
 
         logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);

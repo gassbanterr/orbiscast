@@ -8,6 +8,6 @@ Welcome! This is a personal or small-scale project I’m working on. Want to sug
 
 ## Guidelines
 - Keep it simple.
-- No formal code style or requirements—just make sure it works!
+- No formal code style or requirements, but try to keep it consistent with the existing code.
 
 _This project is mostly for my personal use, so I may not respond quickly. Thanks for understanding!_

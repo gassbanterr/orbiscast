@@ -121,10 +121,15 @@ export async function stopStreaming() {
     try {
         abortController.abort();
         await new Promise(resolve => setTimeout(resolve, 1000));
-        logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
-        currentChannelEntry = null;
         abortController = new AbortController();
 
+        if (!currentChannelEntry) {
+            logger.debug('No channel currently playing');
+            return;
+        }
+
+        logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
+        currentChannelEntry = null;
         // Clear the timeout when stopping the stream
         if (streamTimeout) {
             clearTimeout(streamTimeout);

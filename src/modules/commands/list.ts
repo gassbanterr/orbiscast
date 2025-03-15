@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { getChannelEntries } from '../../modules/database';
 
@@ -23,14 +23,26 @@ export async function generateChannelList(pageOption: string | number | undefine
     const itemsPerPage = 25;
 
     if (pageOption === 'all') {
-        const channelList = channelEntries.map(channel => `- \`${channel.tvg_name || 'Unknown'}\``).join('\n');
+        const embed = new EmbedBuilder()
+            .setTitle(`📺 All Channels`)
+            .setColor('#0099ff')
+            .setTimestamp();
+
+        for (let i = 0; i < channelEntries.length; i += 10) {
+            const chunk = channelEntries.slice(i, i + 10);
+            const fieldValue = chunk.map(channel => `- ${channel.tvg_name || 'Unknown'}`).join('\n');
+            embed.addFields({ name: `Channels ${i + 1}-${i + chunk.length}`, value: fieldValue });
+        }
+
         return {
             success: true,
-            message: `**All Channels:**\n${channelList}`,
+            message: `**All Channels:**`,
             isAllChannels: true,
             page: 1,
             totalPages: Math.ceil(channelEntries.length / itemsPerPage),
-            channels: channelEntries
+            channels: channelEntries,
+            embed,
+            components: []
         };
     }
 
@@ -122,16 +134,20 @@ export async function generateChannelList(pageOption: string | number | undefine
  */
 export async function handleListCommand(interaction: CommandInteraction) {
     const rawPageOption = interaction.options.get('page')?.value;
-    const pageOption = typeof rawPageOption === 'boolean' ? undefined : rawPageOption;
+    const pageOption = typeof rawPageOption === 'number' || rawPageOption === 'all' ? rawPageOption : undefined;
     const result = await generateChannelList(pageOption);
 
     if (result.embed && result.components) {
         await interaction.reply({
             content: result.message,
             embeds: [result.embed],
-            components: result.components
+            components: result.components,
+            flags: MessageFlags.Ephemeral
         });
     } else {
-        await interaction.reply(result.message);
+        await interaction.reply({
+            content: result.message,
+            flags: MessageFlags.Ephemeral
+        });
     }
 }

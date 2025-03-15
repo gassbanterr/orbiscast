@@ -1,4 +1,4 @@
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { downloadCacheAndFillDb, fillDbChannels, fillDbProgrammes } from '../../modules/iptv';
 
@@ -39,5 +39,5 @@ export async function executeRefresh(type: string): Promise<{ success: boolean, 
 export async function handleRefreshCommand(interaction: CommandInteraction) {
     const type = interaction.options.get('type', true).value as string;
     const result = await executeRefresh(type);
-    await interaction.reply(result.message);
+    await interaction.reply({ content: result.message, flags: MessageFlags.Ephemeral });
 }

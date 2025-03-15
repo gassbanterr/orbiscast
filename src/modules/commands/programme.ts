@@ -1,8 +1,21 @@
-import { CommandInteraction, EmbedBuilder } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
+import type { ProgrammeEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
+
+/**
+ * Finds the current show from a list of programmes
+ * @param programmes - List of programmes
+ * @param now - Current timestamp
+ * @returns The current show or the next upcoming show
+ */
+function getCurrentShow(programmes: ProgrammeEntry[], now: number) {
+    return programmes.find(p =>
+        (p.start_timestamp ?? 0) <= now && (p.stop_timestamp ?? Infinity) >= now
+    ) || programmes[0];
+}
 
 /**
  * Generates programme information embeds for a given channel
@@ -51,9 +64,7 @@ export async function generateProgrammeInfo(channelName: string) {
             .setTimestamp()
             .setFooter({ text: 'Programme information is subject to change' });
 
-        const currentShow = futureProgrammes.find(p =>
-            (p.start_timestamp ?? 0) <= now && (p.stop_timestamp ?? Infinity) >= now
-        ) || futureProgrammes[0];
+        const currentShow = getCurrentShow(futureProgrammes, now);
 
         if (currentShow) {
             const isLive = (currentShow.start_timestamp ?? 0) <= now && (currentShow.stop_timestamp ?? Infinity) >= now;
@@ -139,11 +150,11 @@ export async function generateProgrammeInfo(channelName: string) {
  * @param interaction - The Discord command interaction
  */
 export async function handleProgrammeCommand(interaction: CommandInteraction) {
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const channelName = interaction.options.get('channel')?.value as string;
     if (!channelName) {
-        await interaction.editReply('Please specify a channel name.');
+        await interaction.editReply({ content: 'Please specify a channel name.' });
         return;
     }
 
@@ -152,7 +163,7 @@ export async function handleProgrammeCommand(interaction: CommandInteraction) {
     const programmeInfo = await generateProgrammeInfo(channelName);
 
     if (!programmeInfo.success) {
-        await interaction.editReply(programmeInfo.message);
+        await interaction.editReply({ content: programmeInfo.message });
         return;
     }
 

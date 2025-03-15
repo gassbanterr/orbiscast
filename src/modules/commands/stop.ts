@@ -1,4 +1,4 @@
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { leaveVoiceChannel, stopStreaming } from '../../modules/streaming';
 
@@ -28,5 +28,5 @@ export async function executeStopStream() {
 export async function handleStopCommand(interaction: CommandInteraction) {
     logger.info('Command /stop received');
     const result = await executeStopStream();
-    await interaction.reply(result.message);
+    await interaction.reply({ content: result.message, flags: MessageFlags.Ephemeral });
 }

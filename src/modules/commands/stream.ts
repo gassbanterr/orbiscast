@@ -161,7 +161,7 @@ export async function executeStreamChannel(channelName: string, voiceChannelId: 
  * @param interaction - The Discord command interaction
  */
 export async function handleStreamCommand(interaction: CommandInteraction) {
-    const channelName = interaction.options.get('channel_name')?.value as string;
+    const channelName = interaction.options.get('channel')?.value as string;
     if (!channelName) {
         await interaction.reply('Please specify a channel name.');
         return;

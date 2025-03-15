@@ -33,7 +33,7 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
-            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
+            .addStringOption(option => option.setName('channel').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
             .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),

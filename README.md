@@ -23,7 +23,7 @@ _I am not responsible for any misuse of this tool. Ensure to comply with all app
 
 You will need to set a few things up before you can run the bot:
 
-- **Note**: Do not share any of the tokens [mentioned below](#discord-data) with anyone. If you do, regenerate them immediately.
+- **Note**: Do not share any of the tokens [mentioned below](#discord-configuration) with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
 - Get the user token from the Discord web client.
@@ -32,7 +32,13 @@ You will need to set a few things up before you can run the bot:
   - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Get the bot and the user on your desired server.
   - The user has to manually join the server.
-  - The bot can be added following the portal instructions linked above.
+  - The bot can be added following the portal instructions linked above. Make sure to include the following scopes when generating the bot invite link:
+    - `bot`
+    - `applications.commands`
+    - `guilds`
+    - `guild.voice_states`
+    - `guild.messages`
+    - `message_content`
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
 _Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data._
@@ -98,6 +104,8 @@ The application uses the following environment variables, which should be define
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
+| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
+| `TZ`               | Timezone for the container. Example: `Europe/Ljubljana`                      | `UTC`                                    | ✘        |
 
 ### Discord Configuration
 
@@ -108,14 +116,13 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 | `DISCORD_BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
 | `DISCORD_USER_TOKEN`  | Token for the Discord user.                      | `YOUR_USER_TOKEN_HERE`                   | ✔        |
 | `GUILD`               | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
-| `DEFAULT_TEXT_CHANNEL`| Default Discord text channel ID.                 | `000000000000000000`                     | ✔        |
-| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 
 ## Commands
 
 The bot can be controlled using the following commands in the text channel:
 
 - `/stream <channel_name>`: Start streaming the specified channel.
+- `/programme <channel_name>`: Get the current programme for the specified channel. This will return the next 10 programmes.
 - `/stop`: Stop the current stream.
 - `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
 - `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".

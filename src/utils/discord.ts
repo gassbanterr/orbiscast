@@ -1,10 +1,14 @@
-import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, GuildMember, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { getLogger } from './logger';
 import { config } from './config';
-import { getChannelEntries } from './database';
-import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
+import { getChannelEntries } from '../modules/database';
+import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand, handleProgrammeCommand } from '../modules/commands';
 
 const logger = getLogger();
+
+/**
+ * Discord client instance with configured intents and partials
+ */
 export const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
     partials: [Partials.Channel],
@@ -26,22 +30,10 @@ client.once('ready', async () => {
 
     logger.info(`Connected to guild: ${guild.name}`);
 
-    const textChannel = guild.channels.cache.get(config.DEFAULT_TEXT_CHANNEL);
-    if (!textChannel?.isTextBased()) {
-        logger.error(`Text channel ${config.DEFAULT_TEXT_CHANNEL} not found`);
-        logger.debug('Channels in the guild:');
-        guild.channels.cache.forEach(channel => {
-            logger.debug(`- ${channel.name} (${channel.id})`);
-        });
-        return;
-    }
-
-    logger.info(`Connected to text channel: ${textChannel.name}`);
-
     const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
-            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
+            .addStringOption(option => option.setName('channel').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
             .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),
@@ -52,6 +44,8 @@ client.once('ready', async () => {
                     { name: 'channels', value: 'channels' },
                     { name: 'programme', value: 'programme' }
                 )),
+        new SlashCommandBuilder().setName('programme').setDescription('Show programme guide for a channel')
+            .addStringOption(option => option.setName('channel').setDescription('The channel name').setAutocomplete(true).setRequired(true)),
     ].map(command => command.toJSON());
 
     try {
@@ -73,11 +67,65 @@ client.on('interactionCreate', async interaction => {
             await handleListCommand(interaction);
         } else if (commandName === 'refresh') {
             await handleRefreshCommand(interaction);
+        } else if (commandName === 'programme') {
+            await handleProgrammeCommand(interaction);
+        }
+    } else if (interaction.isButton()) {
+        // Handle button interactions globally
+        const { customId } = interaction;
+
+        if (customId === 'show_programme') {
+            // This is handled in the collector in the stream command
+        } else if (customId === 'stop_stream') {
+            if (!interaction.isButton()) return;
+            await interaction.deferUpdate();
+
+            const { executeStopStream } = require('../modules/commands/stop');
+            const result = await executeStopStream();
+
+            await interaction.followUp({
+                content: result.message,
+                ephemeral: false
+            });
+        } else if (customId.startsWith('play_channel_')) {
+            if (!interaction.isButton()) return;
+            await interaction.deferUpdate();
+
+            const channelName = customId.replace('play_channel_', '');
+            const { executeStreamChannel } = require('../modules/commands/stream');
+
+            if (interaction.member && 'voice' in interaction.member) {
+                const member = interaction.member as GuildMember;
+                const voiceChannel = member.voice.channel;
+
+                if (!voiceChannel) {
+                    await interaction.followUp({
+                        content: 'You need to be in a voice channel to play this channel.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+                if (result.success) {
+                    await interaction.followUp({
+                        content: result.message,
+                        embeds: result.embed ? [result.embed] : [],
+                        components: result.components || []
+                    });
+                } else {
+                    await interaction.followUp({
+                        content: result.message,
+                        ephemeral: true
+                    });
+                }
+            }
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;
 
-        if (commandName === 'stream') {
+        if (commandName === 'stream' || commandName === 'programme') {
             const current = options.getFocused();
             const channelEntries = await getChannelEntries();
             const choices = channelEntries.map(entry => entry.tvg_name).filter((name): name is string => name !== undefined && name.toLowerCase().includes(current.toLowerCase()));

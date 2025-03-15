@@ -1,3 +1,6 @@
+/**
+ * Represents an IPTV channel entry
+ */
 export interface ChannelEntry {
     xui_id: number;
     tvg_id?: string;
@@ -9,13 +12,17 @@ export interface ChannelEntry {
     country?: string;
 }
 
+/**
+ * Represents a programme entry for TV guide information
+ */
 export interface ProgrammeEntry {
-    start?: string;
-    stop?: string;
-    start_timestamp?: number;
-    stop_timestamp?: number;
-    channel?: string;
-    title?: string;
-    description?: string;
-    created_at?: string;
+    start: string;
+    stop: string;
+    start_timestamp: number;
+    stop_timestamp: number;
+    channel: string;
+    title: string;
+    description: string;
+    category: string;
+    created_at: string;
 }

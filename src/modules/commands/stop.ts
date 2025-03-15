@@ -1,18 +1,32 @@
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
-import { leaveVoiceChannel, stopStreaming } from '../../utils/discord_stream';
+import { leaveVoiceChannel, stopStreaming } from '../../modules/streaming';
 
 const logger = getLogger();
 
-export async function handleStopCommand(interaction: CommandInteraction) {
-    logger.info('Command /stop received');
+/**
+ * Stops the current stream and disconnects from the voice channel
+ * @returns Object containing success status and result message
+ */
+export async function executeStopStream() {
     try {
         await stopStreaming();
         await new Promise(resolve => setTimeout(resolve, 500));
         await leaveVoiceChannel();
-        await interaction.reply('Stopped the stream and left the voice channel');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return { success: true, message: 'Stopped the stream and left the voice channel' };
     } catch (error) {
         logger.error(`Error stopping stream: ${error}`);
-        await interaction.reply(`Error stopping stream: ${error}`);
+        return { success: false, message: `Error stopping stream: ${error}` };
     }
+}
+
+/**
+ * Handles the /stop slash command interaction
+ * @param interaction - The Discord command interaction
+ */
+export async function handleStopCommand(interaction: CommandInteraction) {
+    logger.info('Command /stop received');
+    const result = await executeStopStream();
+    await interaction.reply({ content: result.message, flags: MessageFlags.Ephemeral });
 }

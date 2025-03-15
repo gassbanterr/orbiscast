@@ -1,6 +1,5 @@
 import { config as dotenvConfig } from 'dotenv';
 import { getLogger } from './logger';
-import { downloadCacheAndFillDb } from './database';
 
 const logger = getLogger();
 
@@ -13,7 +12,6 @@ class Config {
     DISCORD_BOT_TOKEN: string;
     DISCORD_USER_TOKEN: string;
     GUILD: string;
-    DEFAULT_TEXT_CHANNEL: string;
     DEBUG: boolean;
     CACHE_DIR: string;
 
@@ -30,11 +28,9 @@ class Config {
         this.DISCORD_BOT_TOKEN = env.DISCORD_BOT_TOKEN?.trim() || '';
         this.DISCORD_USER_TOKEN = env.DISCORD_USER_TOKEN?.trim() || '';
         this.GUILD = env.GUILD?.trim() || '0';
-        this.DEFAULT_TEXT_CHANNEL = env.DEFAULT_TEXT_CHANNEL?.trim() || '0';
         this.DEBUG = env.DEBUG?.trim().toLowerCase() === 'true';
         this.CACHE_DIR = env.CACHE_DIR?.trim() || (this.RAM_CACHE ? '/dev/shm/orbiscast' : '../cache');
 
-        // Log the loaded GUILD ID for debugging
         logger.info(`Loaded GUILD ID: ${this.GUILD}`);
 
         if (!this.validateEnvVars()) {
@@ -44,13 +40,16 @@ class Config {
         }
 
         logger.info("Successfully loaded environment variables");
-
-        // Log the configuration values for debugging
-        logger.debug(`Configuration: ${JSON.stringify(this, null, 2)}`);
+        logger.info(`Debug mode is set to: ${this.DEBUG}`);
+        logger.debug(`Configuration: ${JSON.stringify(this.getSanitizedConfig(), null, 2)}`);
     }
 
+    /**
+     * Validates that all required environment variables are set
+     * @returns True if all required variables are set, false otherwise
+     */
     private validateEnvVars(): boolean {
-        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD', 'DEFAULT_TEXT_CHANNEL'];
+        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD'];
         let allVarsSet = true;
 
         requiredVars.forEach(varName => {
@@ -61,6 +60,41 @@ class Config {
         });
 
         return allVarsSet;
+    }
+
+    /**
+     * Creates a sanitized version of the config for logging, with sensitive values hidden
+     * @returns Sanitized configuration object
+     */
+    private getSanitizedConfig(): Record<string, any> {
+        const sanitized = { ...this };
+
+        if (sanitized.PLAYLIST) {
+            sanitized.PLAYLIST = this.obfuscateString(sanitized.PLAYLIST, true);
+        }
+        if (sanitized.XMLTV) {
+            sanitized.XMLTV = this.obfuscateString(sanitized.XMLTV, true);
+        }
+
+        if (sanitized.DISCORD_BOT_TOKEN) {
+            sanitized.DISCORD_BOT_TOKEN = this.obfuscateString(sanitized.DISCORD_BOT_TOKEN);
+        }
+        if (sanitized.DISCORD_USER_TOKEN) {
+            sanitized.DISCORD_USER_TOKEN = this.obfuscateString(sanitized.DISCORD_USER_TOKEN);
+        }
+
+        return sanitized;
+    }
+
+    /**
+     * Obfuscates a string for display in logs
+     * @param input - The string to obfuscate
+     * @param full_obfuscation - Whether to obfuscate the entire string or leave the last 4 characters visible
+     * @returns Obfuscated string
+     */
+    private obfuscateString(input: string, full_obfuscation: boolean = false): string {
+        const obfuscationLength = full_obfuscation ? input.length : input.length - 4;
+        return '*'.repeat(obfuscationLength) + input.slice(obfuscationLength);
     }
 }
 

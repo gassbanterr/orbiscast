@@ -1,4 +1,4 @@
-name: Publish Docker Image
+name: Main Branch Release
 
 on:
     release:
@@ -29,7 +29,7 @@ jobs:
               with:
                   images: zbejas/orbiscast
                   tags: |
-                      type=ref,event=release
+                      type=semver,pattern={{version}}
 
             - name: Build and push Docker image
               id: push

@@ -1,7 +1,7 @@
 # OrbisCast
 
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/main.yml?label=main%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags)
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/dev.yml?label=dev%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/main.yml?label=main%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags?ordering=name)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/dev.yml?label=dev%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags?ordering=name)
 [![GitHub last commit](https://img.shields.io/github/last-commit/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/pulls)
@@ -64,7 +64,7 @@ _The `-f` flag is optional and is used to follow the logs._
 
 All of the app data is stored in `/app/data`. The cache is stored in `/app/cache` or RAM, depending on the `RAM_CACHE` and `CACHE_DIR` environment variables.
 
-You can check the available tags on the [Docker Hub page](https://hub.docker.com/r/zbejas/orbiscast/tags).
+You can check the available tags on the [Docker Hub page](https://hub.docker.com/r/zbejas/orbiscast/tags?ordering=name).
 
 ### Manual
 

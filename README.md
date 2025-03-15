@@ -23,7 +23,7 @@ _I am not responsible for any misuse of this tool. Ensure to comply with all app
 
 You will need to set a few things up before you can run the bot:
 
-- **Note**: Do not share any of the tokens [mentioned below](#discord-data) with anyone. If you do, regenerate them immediately.
+- **Note**: Do not share any of the tokens [mentioned below](#discord-configuration) with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
 - Get the user token from the Discord web client.

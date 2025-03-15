@@ -146,15 +146,17 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
                 let channel = streamer.client.channels.cache.get(channelId);
                 if (channel && channel.isVoice()) {
                     let members = channel.members.filter(member => !member.user.bot).size;
-                    logger.debug(`Spectators in voice channel: ${members}`);
+                    //logger.debug(`Spectators in voice channel: ${members}`);
                     if (members === 1) {
                         streamAloneTime += 10;
+                        logger.debug(`No spectators for ${streamAloneTime} seconds`);
                     } else {
                         streamAloneTime = 0;
                     }
                     if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
-                        logger.info('No spectators for 10 minutes, stopping stream');
+                        logger.info(`No spectators for ${config.DEFAULT_STREAM_TIMEOUT} minutes, stopping stream`);
                         stopStreaming();
+                        leaveVoiceChannel();
                     }
                 }
             }

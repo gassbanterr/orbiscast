@@ -1,9 +1,17 @@
 services:
   orbiscast:
+  # You can use a specific version if you want by replacing latest with the version number
+  # See https://hub.docker.com/r/zbejas/orbiscast/tags?ordering=name for available versions
     image: docker.io/zbejas/orbiscast:latest
     container_name: orbiscast
     restart: unless-stopped
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data # This is where the database and logs are stored
+    # If you don't want to use an .env file, you can uncomment and define your variables directly here
+    # Don't forget to remove the env_file line below if you do this
+    # environment:
+    #   - PLAYLIST="http://example.com/m3u/playlist.m3u"
+    #   - XMLTV="http://example.com/xmltv/guide.xml"
+    #   ... other required variables, see .env.example and README.md
     env_file:
       - .env

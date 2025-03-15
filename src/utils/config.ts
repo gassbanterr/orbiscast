@@ -44,9 +44,10 @@ class Config {
         }
 
         logger.info("Successfully loaded environment variables");
+        logger.info(`Debug mode is set to: ${this.DEBUG}`);
 
         // Log the configuration values for debugging
-        logger.debug(`Configuration: ${JSON.stringify(this, null, 2)}`);
+        logger.debug(`Configuration: ${JSON.stringify(this.getSanitizedConfig(), null, 2)}`);
     }
 
     private validateEnvVars(): boolean {
@@ -61,6 +62,41 @@ class Config {
         });
 
         return allVarsSet;
+    }
+
+    /**
+     * Returns a sanitized copy of the configuration with sensitive values obfuscated
+     */
+    private getSanitizedConfig(): Record<string, any> {
+        const sanitized = { ...this };
+
+        // Obfuscate URL values
+        if (sanitized.PLAYLIST) {
+            sanitized.PLAYLIST = this.obfuscateString(sanitized.PLAYLIST);
+        }
+        if (sanitized.XMLTV) {
+            sanitized.XMLTV = this.obfuscateString(sanitized.XMLTV);
+        }
+
+        // Obfuscate tokens
+        if (sanitized.DISCORD_BOT_TOKEN) {
+            sanitized.DISCORD_BOT_TOKEN = this.obfuscateString(sanitized.DISCORD_BOT_TOKEN);
+        }
+        if (sanitized.DISCORD_USER_TOKEN) {
+            sanitized.DISCORD_USER_TOKEN = this.obfuscateString(sanitized.DISCORD_USER_TOKEN);
+        }
+
+        return sanitized;
+    }
+
+    /**
+     * Obfuscates a string by replacing most characters with asterisks
+     */
+    private obfuscateString(input: string): string {
+        const length = input.length;
+        const visibleLength = Math.max(3, Math.floor(length / 2));
+        const obfuscated = input.slice(0, visibleLength).padEnd(length, '*');
+        return obfuscated;
     }
 }
 

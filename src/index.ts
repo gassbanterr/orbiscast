@@ -2,24 +2,20 @@ import { config } from './utils/config';
 import { downloadCacheAndFillDb } from './utils/database';
 import { getLogger } from './utils/logger';
 import { client } from './utils/discord';
-import { initializeStreamer, joinVoiceChannel, startStreaming } from './utils/discord_stream';
+import { initializeStreamer } from './utils/discord_stream';
 
 const logger = getLogger();
 
-// Initialize the streamer
-initializeStreamer().then(() => {
-    // Download and cache the playlist
-    downloadCacheAndFillDb().then(() => {
-        // Run the bot
+async function startOrbisCast() {
+    try {
+        await initializeStreamer();
+        await downloadCacheAndFillDb();
         logger.info('Attempting to log in OrbisCast...');
-        client.login(config.BOT_TOKEN).then(() => {
-            logger.info('OrbisCast logged in successfully');
-        }).catch((err: any) => {
-            logger.error(`Error logging in: ${err}`);
-        });
-    }).catch(err => {
-        logger.error(`Error downloading and caching data: ${err}`);
-    });
-}).catch(err => {
-    logger.error(`Error initializing streamer: ${err}`);
-});
+        await client.login(config.DISCORD_BOT_TOKEN);
+        logger.info('OrbisCast logged in successfully');
+    } catch (err) {
+        logger.error(`Error: ${err}`);
+    }
+}
+
+startOrbisCast();

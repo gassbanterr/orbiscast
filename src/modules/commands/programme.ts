@@ -1,11 +1,145 @@
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
 
 const logger = getLogger();
 
+/**
+ * Generates programme information embeds for a given channel
+ * @param channelName - Name of the channel to get programme information for
+ * @returns Object containing success status, message and programme embeds
+ */
+export async function generateProgrammeInfo(channelName: string) {
+    try {
+        const channels = await getChannelEntries();
+        const channel = channels.find(ch => ch.tvg_name?.toLowerCase() === channelName.toLowerCase());
+
+        if (!channel || !channel.tvg_id) {
+            return { success: false, message: `Channel not found: ${channelName}`, embeds: [] };
+        }
+
+        const allProgrammes = await getProgrammeEntries();
+        const channelProgrammes = allProgrammes.filter(p => p.channel === channel.tvg_id);
+
+        const now = Math.floor(Date.now() / 1000);
+        const futureProgrammes = channelProgrammes
+            .filter(p => typeof p.stop_timestamp === 'number' && p.stop_timestamp >= now)
+            .sort((a, b) => (a.start_timestamp ?? 0) - (b.start_timestamp ?? 0))
+            .slice(0, 10); // Get the next 10 upcoming shows
+
+        if (futureProgrammes.length === 0) {
+            return { success: false, message: `No upcoming programmes found for channel: ${channelName}`, embeds: [] };
+        }
+
+        const programmesByDate = futureProgrammes.reduce((acc, programme) => {
+            const startDate = programme.start
+                ? new Date(programme.start)
+                : new Date(programme.start_timestamp ? programme.start_timestamp * 1000 : Date.now());
+
+            const dateKey = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(programme);
+            return acc;
+        }, {} as Record<string, typeof futureProgrammes>);
+
+        const mainEmbed = new EmbedBuilder()
+            .setTitle(`📺 Programme Guide: ${channelName}`)
+            .setColor('#0099ff')
+            .setTimestamp()
+            .setFooter({ text: 'Programme information is subject to change' });
+
+        const currentShow = futureProgrammes.find(p =>
+            (p.start_timestamp ?? 0) <= now && (p.stop_timestamp ?? Infinity) >= now
+        ) || futureProgrammes[0];
+
+        if (currentShow) {
+            const isLive = (currentShow.start_timestamp ?? 0) <= now && (currentShow.stop_timestamp ?? Infinity) >= now;
+            const startDate = currentShow.start
+                ? new Date(currentShow.start)
+                : new Date(currentShow.start_timestamp ? currentShow.start_timestamp * 1000 : Date.now());
+            const stopDate = currentShow.stop
+                ? new Date(currentShow.stop)
+                : new Date(currentShow.stop_timestamp ? currentShow.stop_timestamp * 1000 : Date.now());
+
+            const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const date = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+
+            const description = typeof currentShow.description === 'string' ? currentShow.description : '';
+
+            mainEmbed
+                .setDescription(`${isLive ? '🔴 **NOW LIVE**' : '**Next Up**'}: ${currentShow.title}`)
+                .addFields(
+                    { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
+                    { name: 'Date', value: date, inline: true },
+                    { name: 'Description', value: description ? description.substring(0, 200) + (description.length > 200 ? '...' : '') : 'No description available' }
+                );
+
+            if (isLive) {
+                mainEmbed.setColor('#FF0000'); // Red for live shows
+            }
+        }
+
+        const embedsToSend = [mainEmbed];
+
+        Object.entries(programmesByDate).forEach(([date, programmes]) => {
+            // Skip if this is just the current show
+            if (programmes.length === 1 && programmes[0] === currentShow) {
+                return;
+            }
+
+            const dateEmbed = new EmbedBuilder()
+                .setTitle(`📅 ${date}`)
+                .setColor('#00AAFF');
+
+            programmes.forEach(programme => {
+                if (programme === currentShow) return; // Skip current show as it's in the main embed
+
+                const startDate = programme.start
+                    ? new Date(programme.start)
+                    : new Date(programme.start_timestamp ? programme.start_timestamp * 1000 : Date.now());
+                const stopDate = programme.stop
+                    ? new Date(programme.stop)
+                    : new Date(programme.stop_timestamp ? programme.stop_timestamp * 1000 : Date.now());
+
+                const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const description = typeof programme.description === 'string'
+                    ? (programme.description.length > 100
+                        ? `${programme.description.substring(0, 100)}...`
+                        : programme.description)
+                    : 'No description available';
+
+                dateEmbed.addFields({
+                    name: `${startTime} - ${stopTime}: ${programme.title}`,
+                    value: description
+                });
+            });
+
+            if (dateEmbed.data.fields?.length) {
+                embedsToSend.push(dateEmbed);
+            }
+        });
+
+        // Discord has a limit of up to 10 embeds per message
+        const embedsToSendLimited = embedsToSend.slice(0, 10);
+        return { success: true, message: '', embeds: embedsToSendLimited };
+
+    } catch (error) {
+        logger.error(`Error generating programme info: ${error}`);
+        return { success: false, message: 'An error occurred while fetching the programme information.', embeds: [] };
+    }
+}
+
+/**
+ * Handles the programme command interaction, showing TV guide for a channel
+ * @param interaction - The Discord command interaction
+ */
 export async function handleProgrammeCommand(interaction: CommandInteraction) {
-    await interaction.deferReply(); // Defer reply since fetching programme data might take time
+    await interaction.deferReply();
 
     const channelName = interaction.options.get('channel')?.value as string;
     if (!channelName) {
@@ -15,50 +149,12 @@ export async function handleProgrammeCommand(interaction: CommandInteraction) {
 
     logger.info(`Fetching programme for channel: ${channelName}`);
 
-    try {
-        // Get channel ID from channel name
-        const channels = await getChannelEntries();
-        const channel = channels.find(ch => ch.tvg_name?.toLowerCase() === channelName.toLowerCase());
+    const programmeInfo = await generateProgrammeInfo(channelName);
 
-        if (!channel || !channel.tvg_id) {
-            await interaction.editReply(`Channel not found: ${channelName}`);
-            return;
-        }
-
-        // Get programmes for this channel
-        const allProgrammes = await getProgrammeEntries();
-        const channelProgrammes = allProgrammes.filter(p => p.channel === channel.tvg_id);
-
-        // Sort by start time and filter to show only current and future programmes
-        const now = Math.floor(Date.now() / 1000);
-        const futureProgrammes = channelProgrammes
-            .filter(p => typeof p.stop_timestamp === 'number' && p.stop_timestamp >= now)
-            .sort((a, b) => (a.start_timestamp ?? 0) - (b.start_timestamp ?? 0))
-            .slice(0, 10); // Get the next 10 upcoming shows
-
-        if (futureProgrammes.length === 0) {
-            await interaction.editReply(`No upcoming programmes found for channel: ${channelName}`);
-            return;
-        }
-
-        // Format the programme information
-        const formattedProgrammes = futureProgrammes.map(programme => {
-            const startDate = programme.start ? new Date(programme.start) : new Date(programme.start_timestamp ? programme.start_timestamp * 1000 : Date.now());
-            const stopDate = programme.stop ? new Date(programme.stop) : new Date(programme.stop_timestamp ? programme.stop_timestamp * 1000 : Date.now());
-            const isLive = (programme.start_timestamp ?? 0) <= now && (programme.stop_timestamp ?? Infinity) >= now;
-
-            const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const date = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-
-            const description = typeof programme.description === 'string' ? programme.description : '';
-            return `${isLive ? '🔴 LIVE: ' : ''}**${programme.title}** (${channelName}, ${date}, ${startTime}-${stopTime})${description ? `\n${description.substring(0, 100)}${description.length > 100 ? '...' : ''}` : ''}`;
-        }).join('\n\n');
-
-        await interaction.editReply(`**Programme for ${channelName}:**\n\n${formattedProgrammes}`);
-
-    } catch (error) {
-        logger.error(`Error fetching programme: ${error}`);
-        await interaction.editReply('An error occurred while fetching the programme information.');
+    if (!programmeInfo.success) {
+        await interaction.editReply(programmeInfo.message);
+        return;
     }
+
+    await interaction.editReply({ embeds: programmeInfo.embeds });
 }

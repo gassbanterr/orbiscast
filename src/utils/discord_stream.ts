@@ -88,6 +88,51 @@ export async function leaveVoiceChannel() {
     }
 }
 
+function startSpectatorMonitoring(): () => void {
+    // Reset the alone time counter
+    streamAloneTime = 0;
+
+    // Clear any existing monitor
+    if (streamSpectatorMonitor) {
+        clearInterval(streamSpectatorMonitor);
+        streamSpectatorMonitor = null;
+    }
+
+    // Start a new monitor
+    streamSpectatorMonitor = setInterval(() => {
+        const channelId = streamer.voiceConnection?.channelId;
+        if (!channelId) return;
+
+        const channel = streamer.client.channels.cache.get(channelId);
+        if (!channel || !channel.isVoice()) return;
+
+        const members = channel.members.filter(member => !member.user.bot).size;
+
+        // Check if only the bot is in the channel
+        if (members === 1) {
+            streamAloneTime += 10;
+            logger.debug(`No spectators for ${streamAloneTime} seconds`);
+
+            if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
+                logger.info(`No spectators for ${config.DEFAULT_STREAM_TIMEOUT} ${config.DEFAULT_STREAM_TIMEOUT > 1 ? 'minutes' : 'minute'}. Stopping stream.`);
+                stopStreaming();
+                leaveVoiceChannel();
+            }
+        } else {
+            streamAloneTime = 0;
+        }
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+        if (streamSpectatorMonitor) {
+            logger.debug('Cleaning up spectator monitor');
+            clearInterval(streamSpectatorMonitor);
+            streamSpectatorMonitor = null;
+        }
+        streamAloneTime = 0;
+    };
+}
+
 export async function startStreaming(channelEntry: ChannelEntry) {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
@@ -115,40 +160,18 @@ export async function startStreaming(channelEntry: ChannelEntry) {
 
         logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);
 
-        // Clear any existing spectator monitor
-        if (streamSpectatorMonitor) {
-            logger.debug('Clearing existing spectator monitor');
-            clearInterval(streamSpectatorMonitor);
-            streamSpectatorMonitor = null;
+        // Start monitoring spectators and get the cleanup function
+        const cleanupMonitoring = startSpectatorMonitoring();
+
+        try {
+            await playStream(output, streamer, {
+                type: "go-live",
+            }, abortController.signal);
+        } catch (error) {
+            // Clean up monitoring if stream fails
+            cleanupMonitoring();
+            throw error;
         }
-
-        // Start a spectator monitor
-        streamSpectatorMonitor = setInterval(() => {
-            const channelId = streamer.voiceConnection?.channelId;
-            if (channelId) {
-                let channel = streamer.client.channels.cache.get(channelId);
-                if (channel && channel.isVoice()) {
-                    let members = channel.members.filter(member => !member.user.bot).size;
-                    //logger.debug(`Spectators in voice channel: ${members}`);
-                    if (members === 1) {
-                        streamAloneTime += 10;
-                        logger.debug(`No spectators for ${streamAloneTime} seconds`);
-                    } else {
-                        streamAloneTime = 0;
-                    }
-                    if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
-                        logger.info(`No spectators for ${config.DEFAULT_STREAM_TIMEOUT} minutes, stopping stream`);
-                        stopStreaming();
-                        leaveVoiceChannel();
-                    }
-                }
-            }
-        }, 10000); // Check every 10 seconds
-
-        await playStream(output, streamer, {
-            type: "go-live",
-        }, abortController.signal);
-
     } catch (error) {
         logger.error(`Error starting stream: ${error}`);
         await stopStreaming();
@@ -173,12 +196,14 @@ export async function stopStreaming() {
 
         logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
         currentChannelEntry = null;
-        // Clear the timeout when stopping the stream
+
+        // Clear the spectator monitor
         if (streamSpectatorMonitor) {
             logger.debug('Clearing spectator monitor');
             clearInterval(streamSpectatorMonitor);
             streamSpectatorMonitor = null;
         }
+        streamAloneTime = 0;
     } catch (error) {
         logger.error(`Error stopping stream: ${error}`);
     }

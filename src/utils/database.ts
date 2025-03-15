@@ -8,6 +8,7 @@ import { getLogger } from './logger';
 import { cacheFile, clearCache, getCachedFile, getCachedFilePath } from './cache';
 import { parseStringPromise } from 'xml2js';
 import axios from 'axios';
+import type { ChannelEntry, ProgrammeEntry } from '../interfaces/iptv';
 
 const logger = getLogger();
 const __filename = fileURLToPath(import.meta.url);
@@ -18,28 +19,6 @@ fs.mkdir(dataDir, { recursive: true }).catch(err => logger.error(`Error creating
 
 const channelsDb = new Low<{ channels: ChannelEntry[] }>(new JSONFile(join(dataDir, 'channels.db.json')), { channels: [] });
 const programmesDb = new Low<{ programmes: ProgrammeEntry[] }>(new JSONFile(join(dataDir, 'programmes.db.json')), { programmes: [] });
-
-interface ChannelEntry {
-    xui_id: number;
-    tvg_id?: string;
-    tvg_name?: string;
-    tvg_logo?: string;
-    group_title?: string;
-    url: string;
-    created_at?: string;
-    country?: string;
-}
-
-interface ProgrammeEntry {
-    start?: string;
-    stop?: string;
-    start_timestamp?: number;
-    stop_timestamp?: number;
-    channel?: string;
-    title?: string;
-    description?: string;
-    created_at?: string;
-}
 
 export async function getChannelEntries(): Promise<ChannelEntry[]> {
     await channelsDb.read();

@@ -4,11 +4,14 @@ import { prepareStream, playStream, Utils } from "@dank074/discord-video-stream"
 import { getLogger } from './logger';
 import { config } from './config';
 import ffmpeg from 'fluent-ffmpeg';
+import type { ChannelEntry } from '../interfaces/iptv';
 
 const logger = getLogger();
 const streamer = new Streamer(new Client());
 let abortController = new AbortController();
 let ffmpegCommand: ffmpeg.FfmpegCommand | null = null;
+let currentChannelEntry: ChannelEntry | null = null;
+let streamTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export async function initializeStreamer() {
     if (streamer.client.isReady()) {
@@ -55,14 +58,19 @@ export async function leaveVoiceChannel() {
     }
 }
 
-export async function startStreaming(videoUrl: string, duration: number) {
+export async function startStreaming(channelEntry: ChannelEntry, duration: number) {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
         return;
     }
 
+    if (isNaN(duration) || duration <= 0) {
+        logger.error('Invalid duration specified for streaming');
+        return;
+    }
+
     try {
-        const { command, output } = prepareStream(videoUrl, {
+        const { command, output } = prepareStream(channelEntry.url, {
             noTranscoding: false,
             minimizeLatency: true,
             bitrateVideo: 5000,
@@ -72,14 +80,24 @@ export async function startStreaming(videoUrl: string, duration: number) {
         }, abortController.signal);
 
         ffmpegCommand = command;
+        currentChannelEntry = channelEntry;
 
         command.on("error", async (err: any, _stdout: any, _stderr: any) => {
             logger.error(`FFmpeg error: ${err}`);
         });
 
+        // Log the playing channel
+        logger.info(`Streaming channel: ${channelEntry.tvg_name} for ${duration} minutes`);
+
+        // Clear any existing timeout
+        if (streamTimeout) {
+            logger.debug('Clearing existing timeout');
+            clearTimeout(streamTimeout);
+            streamTimeout = null;
+        }
+
         // Set a timer to disconnect the streamer after the specified duration
-        setTimeout(async () => {
-            logger.info(`Stopping stream after ${duration} minutes`);
+        streamTimeout = setTimeout(async (): Promise<void> => {
             await stopStreaming();
             await leaveVoiceChannel();
             logger.info(`Disconnected from the voice channel after ${duration} minutes`);
@@ -103,8 +121,15 @@ export async function stopStreaming() {
     try {
         abortController.abort();
         await new Promise(resolve => setTimeout(resolve, 1000));
+        logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
+        currentChannelEntry = null;
         abortController = new AbortController();
-        logger.info('Stopped playing video');
+
+        // Clear the timeout when stopping the stream
+        if (streamTimeout) {
+            clearTimeout(streamTimeout);
+            streamTimeout = null;
+        }
     } catch (error) {
         logger.error(`Error stopping stream: ${error}`);
     }

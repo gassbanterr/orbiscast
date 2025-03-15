@@ -40,7 +40,7 @@ _Note that in my testing, I've been using [Threadfin](https://github.com/Threadf
 ### Docker
 
 In the repo is a provided `compose.yml` file that can be used to run the bot.
-Download the file and fill in the required environment variables or create a `.env` file in the same directory as the `compose.yml` file.
+Copy the file and fill in the required environment variables or create a `.env` file in the same directory as the `compose.yml` file.
 
 Then, run the following command to start the bot:
 

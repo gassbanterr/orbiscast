@@ -1,6 +1,6 @@
 services:
   orbiscast:
-    image: docker.io/zbejas/orbiscast:dev
+    image: docker.io/zbejas/orbiscast:latest
     container_name: orbiscast
     restart: unless-stopped
     volumes:

@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder 
 import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from './database';
-import { handleStreamCommand, handleStopCommand, handleJoinCommand, handleLeaveCommand, handleListCommand } from '../modules/commands';
+import { handleStreamCommand, handleStopCommand, handleJoinCommand, handleLeaveCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
 
 const logger = getLogger();
 export const client = new Client({
@@ -48,6 +48,13 @@ client.once('ready', async () => {
         new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
             .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
+        new SlashCommandBuilder().setName('refresh').setDescription('Refresh the specified data')
+            .addStringOption(option => option.setName('type').setDescription('The type of data to refresh').setRequired(true)
+                .addChoices(
+                    { name: 'all', value: 'all' },
+                    { name: 'channels', value: 'channels' },
+                    { name: 'programme', value: 'programme' }
+                )),
     ].map(command => command.toJSON());
 
     try {
@@ -71,6 +78,8 @@ client.on('interactionCreate', async interaction => {
             await handleLeaveCommand(interaction);
         } else if (commandName === 'list') {
             await handleListCommand(interaction);
+        } else if (commandName === 'refresh') {
+            await handleRefreshCommand(interaction);
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;

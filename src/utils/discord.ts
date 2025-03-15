@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder 
 import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from './database';
-import { handleStreamCommand, handleStopCommand, handleJoinCommand, handleLeaveCommand, handleListCommand } from '../modules/commands';
+import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand } from '../modules/commands';
 
 const logger = getLogger();
 export const client = new Client({
@@ -38,16 +38,20 @@ client.once('ready', async () => {
 
     logger.info(`Connected to text channel: ${textChannel.name}`);
 
-    const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
+    const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
-            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true))
-            .addIntegerOption(option => option.setName('length').setDescription('The length of time to stream the channel (in minutes)')),
+            .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
-        new SlashCommandBuilder().setName('join').setDescription('Join a voice channel'),
-        new SlashCommandBuilder().setName('leave').setDescription('Leave the voice channel'),
         new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
-            .addIntegerOption(option => option.setName('page').setDescription('Page number to display')),
+            .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),
+        new SlashCommandBuilder().setName('refresh').setDescription('Refresh the specified data')
+            .addStringOption(option => option.setName('type').setDescription('The type of data to refresh').setRequired(true)
+                .addChoices(
+                    { name: 'all', value: 'all' },
+                    { name: 'channels', value: 'channels' },
+                    { name: 'programme', value: 'programme' }
+                )),
     ].map(command => command.toJSON());
 
     try {
@@ -65,12 +69,10 @@ client.on('interactionCreate', async interaction => {
             await handleStreamCommand(interaction);
         } else if (commandName === 'stop') {
             await handleStopCommand(interaction);
-        } else if (commandName === 'join') {
-            await handleJoinCommand(interaction);
-        } else if (commandName === 'leave') {
-            await handleLeaveCommand(interaction);
         } else if (commandName === 'list') {
             await handleListCommand(interaction);
+        } else if (commandName === 'refresh') {
+            await handleRefreshCommand(interaction);
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;
@@ -92,6 +94,6 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-client.login(config.BOT_TOKEN).catch(err => {
+client.login(config.DISCORD_BOT_TOKEN).catch(err => {
     logger.error(`Error logging in: ${err}`);
 });

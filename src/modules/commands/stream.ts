@@ -10,8 +10,7 @@ const logger = getLogger();
 
 export async function handleStreamCommand(interaction: CommandInteraction) {
     const channelName = interaction.options.get('channel_name')?.value as string;
-    const length = interaction.options.get('length')?.value as number || config.DEFAULT_STREAM_TIME;
-    logger.info(`Command /stream received with channel: ${channelName} and length: ${length}`);
+    logger.info(`Command /stream received with channel: ${channelName}.`);
 
     await interaction.deferReply();
 
@@ -41,11 +40,11 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                 await new Promise(resolve => setTimeout(resolve, 750));
             }
 
-            await interaction.editReply(`Streaming ${channelName} for ${length} minutes. Starting stream...`);
+            await interaction.editReply(`Trying to stream ${channelName}...`);
 
             try {
-                await startStreaming(channelEntry, length);
-                await interaction.editReply(`Started streaming ${channelName} for ${length} minutes`);
+                await startStreaming(channelEntry);
+                await interaction.editReply(`Now streaming ${channelName}`);
             } catch (streamError) {
                 logger.error(`Stream error: ${streamError}`);
                 if (streamError instanceof Error) {

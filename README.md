@@ -1,7 +1,7 @@
 # OrbisCast
 
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/main.yml?label=main%20build)](https://hub.docker.com/repository/docker/zbejas/orbiscast/tags)
-[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/dev.yml?label=dev%20build)](https://hub.docker.com/repository/docker/zbejas/orbiscast/tags)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/main.yml?label=main%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags)
+[![GitHub build status](https://img.shields.io/github/actions/workflow/status/zbejas/orbiscast/dev.yml?label=dev%20build)](https://hub.docker.com/r/zbejas/orbiscast/tags)
 [![GitHub last commit](https://img.shields.io/github/last-commit/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/pulls)
@@ -23,7 +23,7 @@ _I am not responsible for any misuse of this tool. Ensure to comply with all app
 
 You will need to set a few things up before you can run the bot:
 
-- **Note**: Do not share any of the tokens [mentioned below](#discord-bot-data) with anyone. If you do, regenerate them immediately.
+- **Note**: Do not share any of the tokens [mentioned below](#discord-data) with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
 - Get the user token from the Discord web client.
@@ -40,7 +40,7 @@ _Note that in my testing, I've been using [Threadfin](https://github.com/Threadf
 ### Docker
 
 In the repo is a provided `compose.yml` file that can be used to run the bot.
-Download the file and fill in the required environment variables or create a `.env` file in the same directory as the `compose.yml` file.
+Copy the file and fill in the required environment variables or create a `.env` file in the same directory as the `compose.yml` file.
 
 Then, run the following command to start the bot:
 
@@ -88,42 +88,36 @@ bun run start
 
 The application uses the following environment variables, which should be defined in a `.env` file (see `.env.example`):
 
-### IPTV Data
+### System and IPTV Configuration
 
 | Variable           | Description                                      | Example/Default                          | Required |
 |--------------------|--------------------------------------------------|------------------------------------------|----------|
 | `PLAYLIST`         | URL to the M3U playlist.                         | `http://example.com/m3u/playlist.m3u`    | ✔        |
 | `XMLTV`            | URL to the XMLTV guide.                          | `http://example.com/xmltv/guide.xml`     | ✔        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
-| `DEFAULT_STREAM_TIME` | Default stream time in minutes.               | `120`                                    | ✘        |
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
-| `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                                  | ✘        |
+| `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
+| `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
 
-### Discord Bot Data
+### Discord Configuration
 
 The reason we have a `bot` and a `user` token is because the bot token is used to connect to the Discord API, while the user token is used to join the voice channel and stream video.
 
-| Variable           | Description                                      | Example/Default                          | Required |
-|--------------------|--------------------------------------------------|------------------------------------------|----------|
-| `BOT_TOKEN`        | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
-| `DISCORD_USER_TOKEN` | Token for the Discord user.                    | `YOUR_USER_TOKEN_HERE`                   | ✔        |
-| `GUILD`            | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
-| `DEFAULT_TEXT_CHANNEL` | Default Discord text channel ID.             | `000000000000000000`              | ✔        |
-
-### Debug Mode
-
-| Variable           | Description                                      | Example/Default                          | Required |
-|--------------------|--------------------------------------------------|------------------------------------------|----------|
-| `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
+| Variable              | Description                                      | Example/Default                          | Required |
+|-----------------------|--------------------------------------------------|------------------------------------------|----------|
+| `DISCORD_BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
+| `DISCORD_USER_TOKEN`  | Token for the Discord user.                      | `YOUR_USER_TOKEN_HERE`                   | ✔        |
+| `GUILD`               | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
+| `DEFAULT_TEXT_CHANNEL`| Default Discord text channel ID.                 | `000000000000000000`                     | ✔        |
+| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 
 ## Commands
 
 The bot can be controlled using the following commands in the text channel:
 
-- `/stream <channel_name> <length>`: Start streaming the specified channel. Length is in minutes.
+- `/stream <channel_name>`: Start streaming the specified channel.
 - `/stop`: Stop the current stream.
 - `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
-- `/join`: Join a voice channel.
-- `/leave`: Leave the voice channel.
+- `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".
 
 _The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time. If you have more than 25 channels, you will have to type the channel name manually. The channel name is case-sensitive. This is a limitation of the Discord API._

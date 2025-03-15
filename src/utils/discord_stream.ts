@@ -14,31 +14,60 @@ let currentChannelEntry: ChannelEntry | null = null;
 let streamTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export async function initializeStreamer() {
-    if (streamer.client.isReady()) {
-        logger.debug('Streamer client is already logged in');
-        return;
-    }
     try {
-        await (streamer.client as Client).login(config.DISCORD_USER_TOKEN);
-        logger.info('Streamer client logged in successfully');
+        await loginStreamer();
     } catch (error) {
         logger.error(`Error logging in streamer client: ${error}`);
     }
 }
 
-export async function joinVoiceChannel(guildId: string, channelId: string) {
+export async function relogUser() {
+    try {
+        await logoutStreamer();
+        await loginStreamer();
+    }
+    catch (error) {
+        logger.error(`Error relogging user: ${error}`);
+    }
+}
+
+export async function logoutStreamer() {
     if (!streamer.client.isReady()) {
-        logger.error('Streamer client is not logged in');
+        logger.debug('Streamer client is not logged in');
         return;
     }
+    await (streamer.client as Client).logout();
+    logger.info('Streamer client logged out successfully');
+}
+
+export async function loginStreamer() {
+    if (streamer.client.isReady()) {
+        logger.debug('Streamer client is already logged in');
+        return;
+    }
+    await (streamer.client as Client).login(config.DISCORD_USER_TOKEN);
+    logger.info('Streamer client logged in successfully');
+}
+
+
+export async function joinVoiceChannel(guildId: string, channelId: string) {
+    if (!streamer.client.isReady()) {
+        logger.error('Streamer client is not logged in.');
+        return;
+    }
+
     const connection = streamer.voiceConnection;
     if (connection && connection.channelId === channelId) {
         logger.debug(`Already connected to voice channel: ${channelId} in guild: ${guildId}`);
         return;
     }
     try {
-        await streamer.joinVoice(guildId, channelId);
-        logger.info(`Joined voice channel: ${channelId} in guild: ${guildId}`);
+        let response = await streamer.joinVoice(guildId, channelId);
+        if (response.ready) {
+            logger.info(`Connected to voice channel: ${channelId} in guild: ${guildId}`);
+        } else {
+            logger.error(`Failed to connect to voice channel: ${channelId} in guild: ${guildId}`);
+        }
     } catch (error) {
         logger.error(`Error joining voice channel: ${error}`);
     }

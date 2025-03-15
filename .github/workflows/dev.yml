@@ -21,7 +21,7 @@ jobs:
 
             - name: Set up Docker tag
               id: docker_tag
-              run: echo "::set-output name=tag::dev"
+              run: echo "tag=dev" >> $GITHUB_OUTPUT
 
             - name: Build the Docker image
               run: docker build . --file Dockerfile --tag zbejas/orbiscast:dev

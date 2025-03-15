@@ -122,6 +122,7 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 The bot can be controlled using the following commands in the text channel:
 
 - `/stream <channel_name>`: Start streaming the specified channel.
+- `/programme <channel_name>`: Get the current programme for the specified channel. This will return the next 10 programmes.
 - `/stop`: Stop the current stream.
 - `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
 - `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".

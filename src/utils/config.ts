@@ -10,7 +10,7 @@ class Config {
     REFRESH_IPTV: number;
     DEFAULT_STREAM_TIMEOUT: number;
     RAM_CACHE: boolean;
-    BOT_TOKEN: string;
+    DISCORD_BOT_TOKEN: string;
     DISCORD_USER_TOKEN: string;
     GUILD: string;
     DEFAULT_TEXT_CHANNEL: string;
@@ -27,7 +27,7 @@ class Config {
         this.REFRESH_IPTV = parseInt(env.REFRESH_IPTV?.trim() || '1440');
         this.DEFAULT_STREAM_TIMEOUT = parseInt(env.DEFAULT_STREAM_TIMEOUT?.trim() || '10');
         this.RAM_CACHE = env.RAM_CACHE?.trim().toLowerCase() === 'true';
-        this.BOT_TOKEN = env.BOT_TOKEN?.trim() || '';
+        this.DISCORD_BOT_TOKEN = env.DISCORD_BOT_TOKEN?.trim() || '';
         this.DISCORD_USER_TOKEN = env.DISCORD_USER_TOKEN?.trim() || '';
         this.GUILD = env.GUILD?.trim() || '0';
         this.DEFAULT_TEXT_CHANNEL = env.DEFAULT_TEXT_CHANNEL?.trim() || '0';
@@ -50,7 +50,7 @@ class Config {
     }
 
     private validateEnvVars(): boolean {
-        const requiredVars = ['PLAYLIST', 'XMLTV', 'BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD', 'DEFAULT_TEXT_CHANNEL'];
+        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD', 'DEFAULT_TEXT_CHANNEL'];
         let allVarsSet = true;
 
         requiredVars.forEach(varName => {

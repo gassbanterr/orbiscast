@@ -38,7 +38,7 @@ client.once('ready', async () => {
 
     logger.info(`Connected to text channel: ${textChannel.name}`);
 
-    const rest = new REST({ version: '10' }).setToken(config.BOT_TOKEN);
+    const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
             .addStringOption(option => option.setName('channel_name').setDescription('The IPTV channel to stream').setAutocomplete(true)),
@@ -100,6 +100,6 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-client.login(config.BOT_TOKEN).catch(err => {
+client.login(config.DISCORD_BOT_TOKEN).catch(err => {
     logger.error(`Error logging in: ${err}`);
 });

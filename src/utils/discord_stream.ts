@@ -12,6 +12,8 @@ let abortController = new AbortController();
 let ffmpegCommand: ffmpeg.FfmpegCommand | null = null;
 let currentChannelEntry: ChannelEntry | null = null;
 let streamTimeout: ReturnType<typeof setTimeout> | null = null;
+let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
+let streamAloneTime: number = 0;
 
 export async function initializeStreamer() {
     try {
@@ -132,9 +134,37 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
             logger.info(`Disconnected from the voice channel after ${duration} minutes`);
         }, duration * 60 * 1000); // Convert minutes to milliseconds
 
+        // Clear any existing spectator monitor
+        if (streamSpectatorMonitor) {
+            logger.debug('Clearing existing spectator monitor');
+            clearInterval(streamSpectatorMonitor);
+            streamSpectatorMonitor = null;
+        }
+
         await playStream(output, streamer, {
             type: "go-live",
         }, abortController.signal);
+
+        // Start a spectator monitor
+        streamSpectatorMonitor = setInterval(() => {
+            const channelId = streamer.voiceConnection?.channelId;
+            if (channelId) {
+                let channel = streamer.client.channels.cache.get(channelId);
+                if (channel && channel.isVoice()) {
+                    let members = channel.members.filter(member => !member.user.bot).size;
+                    logger.debug(`Spectators in voice channel: ${members}`);
+                    if (members === 1) {
+                        streamAloneTime += 10;
+                    } else {
+                        streamAloneTime = 0;
+                    }
+                    if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
+                        logger.info('No spectators for 10 minutes, stopping stream');
+                        stopStreaming();
+                    }
+                }
+            }
+        }, 10000); // Check every 10 seconds
     } catch (error) {
         logger.error(`Error starting stream: ${error}`);
         await stopStreaming();

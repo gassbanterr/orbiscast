@@ -96,20 +96,20 @@ The application uses the following environment variables, which should be define
 | `XMLTV`            | URL to the XMLTV guide.                          | `http://example.com/xmltv/guide.xml`     | ✔        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
-| `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                                  | ✘        |
+| `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
 
 ### Discord Configuration
 
 The reason we have a `bot` and a `user` token is because the bot token is used to connect to the Discord API, while the user token is used to join the voice channel and stream video.
 
-| Variable           | Description                                      | Example/Default                          | Required |
-|--------------------|--------------------------------------------------|------------------------------------------|----------|
-| `BOT_TOKEN`        | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
-| `DISCORD_USER_TOKEN` | Token for the Discord user.                    | `YOUR_USER_TOKEN_HERE`                   | ✔        |
-| `GUILD`            | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
-| `DEFAULT_TEXT_CHANNEL` | Default Discord text channel ID.             | `000000000000000000`              | ✔        |
-| `DEFAULT_STREAM_TIME` | Default stream time in minutes.               | `120`                                    | ✘        |
+| Variable              | Description                                      | Example/Default                          | Required |
+|-----------------------|--------------------------------------------------|------------------------------------------|----------|
+| `BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
+| `DISCORD_USER_TOKEN`  | Token for the Discord user.                      | `YOUR_USER_TOKEN_HERE`                   | ✔        |
+| `GUILD`               | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
+| `DEFAULT_TEXT_CHANNEL`| Default Discord text channel ID.                 | `000000000000000000`                     | ✔        |
+| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout in minutes.            | `10`                                     | ✘        |
 
 ## Commands
 

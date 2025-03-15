@@ -12,7 +12,6 @@ class Config {
     DISCORD_BOT_TOKEN: string;
     DISCORD_USER_TOKEN: string;
     GUILD: string;
-    DEFAULT_TEXT_CHANNEL: string;
     DEBUG: boolean;
     CACHE_DIR: string;
 
@@ -29,7 +28,6 @@ class Config {
         this.DISCORD_BOT_TOKEN = env.DISCORD_BOT_TOKEN?.trim() || '';
         this.DISCORD_USER_TOKEN = env.DISCORD_USER_TOKEN?.trim() || '';
         this.GUILD = env.GUILD?.trim() || '0';
-        this.DEFAULT_TEXT_CHANNEL = env.DEFAULT_TEXT_CHANNEL?.trim() || '0';
         this.DEBUG = env.DEBUG?.trim().toLowerCase() === 'true';
         this.CACHE_DIR = env.CACHE_DIR?.trim() || (this.RAM_CACHE ? '/dev/shm/orbiscast' : '../cache');
 
@@ -51,7 +49,7 @@ class Config {
      * @returns True if all required variables are set, false otherwise
      */
     private validateEnvVars(): boolean {
-        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD', 'DEFAULT_TEXT_CHANNEL'];
+        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD'];
         let allVarsSet = true;
 
         requiredVars.forEach(varName => {

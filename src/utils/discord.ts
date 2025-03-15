@@ -30,18 +30,6 @@ client.once('ready', async () => {
 
     logger.info(`Connected to guild: ${guild.name}`);
 
-    const textChannel = guild.channels.cache.get(config.DEFAULT_TEXT_CHANNEL);
-    if (!textChannel?.isTextBased()) {
-        logger.error(`Text channel ${config.DEFAULT_TEXT_CHANNEL} not found`);
-        logger.debug('Channels in the guild:');
-        guild.channels.cache.forEach(channel => {
-            logger.debug(`- ${channel.name} (${channel.id})`);
-        });
-        return;
-    }
-
-    logger.info(`Connected to text channel: ${textChannel.name}`);
-
     const rest = new REST({ version: '10' }).setToken(config.DISCORD_BOT_TOKEN);
     const commands = [
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')

@@ -104,6 +104,7 @@ The application uses the following environment variables, which should be define
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
+| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 | `TZ`               | Timezone for the container. Example: `Europe/Ljubljana`                      | `UTC`                                    | ✘        |
 
 ### Discord Configuration
@@ -115,8 +116,6 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 | `DISCORD_BOT_TOKEN`           | Token for the Discord bot.                       | `YOUR_BOT_TOKEN_HERE`                    | ✔        |
 | `DISCORD_USER_TOKEN`  | Token for the Discord user.                      | `YOUR_USER_TOKEN_HERE`                   | ✔        |
 | `GUILD`               | Discord guild (server) ID.                       | `000000000000000000`                     | ✔        |
-| `DEFAULT_TEXT_CHANNEL`| Default Discord text channel ID.                 | `000000000000000000`                     | ✔        |
-| `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 
 ## Commands
 

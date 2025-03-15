@@ -27,7 +27,7 @@ You will need to set a few things up before you can run the bot:
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
 - Get the user token from the Discord web client.
   - The user token is required to join the voice channel and stream video. It is recommended to use a secondary account for this purpose.
-  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd). 
+  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd).
   - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Get the bot and the user on your desired server.
   - The user has to manually join the server.
@@ -57,7 +57,7 @@ You can check the logs using:
 
 ```bash
 docker compose logs -f
-``` 
+```
 
 _The `-f` flag is optional and is used to follow the logs._
 

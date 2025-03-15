@@ -116,8 +116,7 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
             logger.error(`FFmpeg error: ${err}`);
         });
 
-        // Log the playing channel
-        logger.info(`Streaming channel: ${channelEntry.tvg_name} for ${duration} minutes`);
+        logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);
 
         // Clear any existing timeout
         if (streamTimeout) {
@@ -126,13 +125,6 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
             streamTimeout = null;
         }
 
-        // Set a timer to disconnect the streamer after the specified duration
-        streamTimeout = setTimeout(async (): Promise<void> => {
-            await stopStreaming();
-            await leaveVoiceChannel();
-            logger.info(`Disconnected from the voice channel after ${duration} minutes`);
-        }, duration * 60 * 1000); // Convert minutes to milliseconds
-
         // Clear any existing spectator monitor
         if (streamSpectatorMonitor) {
             logger.debug('Clearing existing spectator monitor');
@@ -140,9 +132,12 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
             streamSpectatorMonitor = null;
         }
 
-        await playStream(output, streamer, {
-            type: "go-live",
-        }, abortController.signal);
+        // Set a timer to disconnect the streamer after the specified duration
+        streamTimeout = setTimeout(async (): Promise<void> => {
+            await stopStreaming();
+            await leaveVoiceChannel();
+            logger.info(`Disconnected from the voice channel after ${duration} minutes`);
+        }, duration * 60 * 1000);
 
         // Start a spectator monitor
         streamSpectatorMonitor = setInterval(() => {
@@ -164,6 +159,11 @@ export async function startStreaming(channelEntry: ChannelEntry, duration: numbe
                 }
             }
         }, 10000); // Check every 10 seconds
+
+        await playStream(output, streamer, {
+            type: "go-live",
+        }, abortController.signal);
+
     } catch (error) {
         logger.error(`Error starting stream: ${error}`);
         await stopStreaming();

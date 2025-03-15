@@ -3,7 +3,6 @@ import { Streamer } from '@dank074/discord-video-stream';
 import { prepareStream, playStream, Utils } from "@dank074/discord-video-stream";
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
-import ffmpeg from 'fluent-ffmpeg';
 import type { ChannelEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
@@ -187,6 +186,13 @@ export async function stopStreaming() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         abortController = new AbortController();
 
+        if (streamSpectatorMonitor) {
+            logger.debug('Clearing spectator monitor');
+            clearInterval(streamSpectatorMonitor);
+            streamSpectatorMonitor = null;
+        }
+        streamAloneTime = 0;
+
         if (!currentChannelEntry) {
             logger.debug('No channel currently playing');
             return;
@@ -194,14 +200,6 @@ export async function stopStreaming() {
 
         logger.info(`Stopped video stream from ${currentChannelEntry?.tvg_name || 'unknown channel'}`);
         currentChannelEntry = null;
-
-        // Clear the spectator monitor
-        if (streamSpectatorMonitor) {
-            logger.debug('Clearing spectator monitor');
-            clearInterval(streamSpectatorMonitor);
-            streamSpectatorMonitor = null;
-        }
-        streamAloneTime = 0;
     } catch (error) {
         logger.error(`Error stopping stream: ${error}`);
     }

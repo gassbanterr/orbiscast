@@ -51,7 +51,8 @@ export async function handleProgrammeCommand(interaction: CommandInteraction) {
             const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const date = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
 
-            return `${isLive ? '🔴 LIVE: ' : ''}**${programme.title}** (${date}, ${startTime}-${stopTime})${programme.description ? `\n${programme.description.substring(0, 100)}${programme.description.length > 100 ? '...' : ''}` : ''}`;
+            const description = typeof programme.description === 'string' ? programme.description : '';
+            return `${isLive ? '🔴 LIVE: ' : ''}**${programme.title}** (${date}, ${startTime}-${stopTime})${description ? `\n${description.substring(0, 100)}${description.length > 100 ? '...' : ''}` : ''}`;
         }).join('\n\n');
 
         await interaction.editReply(`**Programme for ${channelName}:**\n\n${formattedProgrammes}`);

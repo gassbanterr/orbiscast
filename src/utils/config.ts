@@ -1,6 +1,5 @@
 import { config as dotenvConfig } from 'dotenv';
 import { getLogger } from './logger';
-import { downloadCacheAndFillDb } from './database';
 
 const logger = getLogger();
 

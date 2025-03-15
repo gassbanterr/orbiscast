@@ -4,7 +4,7 @@ import { parseStringPromise } from 'xml2js';
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
 import { cacheFile, clearCache, getCachedFile, getCachedFilePath } from '../../utils/cache';
-import { clearChannels, addChannels, clearProgrammes, addProgrammes } from '../database';
+import { clearChannels, addChannels, clearProgrammes, addProgrammes, getProgrammeEntries } from '../database';
 import type { ChannelEntry, ProgrammeEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
@@ -182,8 +182,7 @@ async function fetchWithRetry(url: string, cacheFileName: string): Promise<Buffe
 }
 
 async function isProgrammeDataStale(): Promise<boolean> {
-    const { getProgrammes } = require('../database');
-    const programmes = await getProgrammes();
+    const programmes = await getProgrammeEntries();
     const createdAt = programmes?.[0]?.created_at;
     return !createdAt || isOlderThanSetRefreshTime(createdAt);
 }

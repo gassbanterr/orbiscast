@@ -6,6 +6,10 @@ import { initializeStreamer } from './modules/streaming';
 
 const logger = getLogger();
 
+/**
+ * Initialize and start the OrbisCast application
+ * Performs database setup, initializes the streamer, and logs in the Discord bot
+ */
 async function startOrbisCast() {
     try {
         await initializeStreamer();

@@ -14,7 +14,10 @@ export async function downloadCacheAndFillDb(force = false): Promise<void> {
     await fillDbChannels(force);
     await fillDbProgrammes(force);
     logger.debug('Finished parsing');
-    await clearCache();
+
+    if (!config.DEBUG) {
+        await clearCache();
+    }
 
     scheduleIPTVRefresh();
 }
@@ -96,16 +99,68 @@ function fromPlaylistLine(line: string): ChannelEntry | null {
 async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
     const programmes: ProgrammeEntry[] = [];
     try {
-        const parsedXml = await parseStringPromise(await fs.readFile(filePath, 'utf8'));
+        const xmlContent = await fs.readFile(filePath, 'utf8');
+        logger.debug(`XMLTV file size: ${xmlContent.length} bytes`);
+
+        const parsedXml = await parseStringPromise(xmlContent);
+        logger.info(`Found ${parsedXml.tv.programme?.length || 0} programmes in XMLTV`);
+
+        if (!parsedXml.tv.programme || parsedXml.tv.programme.length === 0) {
+            logger.error('No programmes found in XMLTV file');
+            return programmes;
+        }
+
+        // Debug first programme structure
+        const sampleProgramme = parsedXml.tv.programme[0];
+        logger.debug(`Sample programme structure: ${JSON.stringify(sampleProgramme).substring(0, 500)}...`);
+
         for (const programme of parsedXml.tv.programme) {
-            const title = programme.title?.[0] || '';
-            const description = programme.desc?.[0] || '';
-            const startStr = programme.$.start;
-            const stopStr = programme.$.stop;
-            logger.debug(`Parsing programme with start: ${startStr}, stop: ${stopStr}`);
             try {
+                // Extract title, handling nested structure with lang attribute
+                let title = '';
+                if (typeof programme.title?.[0] === 'string') {
+                    title = programme.title[0] || '';
+                } else if (programme.title?.[0]?._) {
+                    title = programme.title[0]._ || '';
+                } else if (programme.title?.[0]?.$?.lang && programme.title[0]._) {
+                    title = programme.title[0]._ || '';
+                }
+
+                // Extract description, handling nested structure with lang attribute
+                let description = '';
+                if (typeof programme.desc?.[0] === 'string') {
+                    description = programme.desc[0] || '';
+                } else if (programme.desc?.[0]?._) {
+                    description = programme.desc[0]._ || '';
+                } else if (programme.desc?.[0]?.$?.lang && programme.desc[0]._) {
+                    description = programme.desc[0]._ || '';
+                }
+
+                // Extract category if available
+                let category = '';
+                if (programme.category?.[0]?._) {
+                    category = programme.category[0]._;
+                } else if (typeof programme.category?.[0] === 'string') {
+                    category = programme.category[0];
+                }
+
+                const startStr = programme.$.start;
+                const stopStr = programme.$.stop;
+
+                if (!startStr || !stopStr) {
+                    logger.error(`Programme missing start/stop times: ${title}`);
+                    continue;
+                }
+
+                logger.debug(`Parsing programme "${title}" with start: ${startStr}, stop: ${stopStr}`);
+
                 const start = parseDate(startStr);
                 const stop = parseDate(stopStr);
+
+                if (start.getTime() === stop.getTime()) {
+                    logger.warn(`Programme "${title}" has identical start and stop times: ${startStr}`);
+                }
+
                 programmes.push({
                     start: start.toISOString(),
                     stop: stop.toISOString(),
@@ -114,11 +169,25 @@ async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
                     channel: programme.$.channel,
                     title,
                     description,
+                    category,
                     created_at: new Date().toISOString(),
                 });
             } catch (error) {
-                logger.error(`Error inserting programme with start: ${startStr}, stop: ${stopStr} - ${error}`);
+                const title = programme.title?.[0]?._ || programme.title?.[0] || 'unknown';
+                logger.error(`Error parsing programme "${title}": ${error}`);
             }
+        }
+
+        // Add summary statistics
+        const channels = new Set(programmes.map(p => p.channel)).size;
+        logger.info(`Parsed ${programmes.length} programmes across ${channels} channels from XMLTV file`);
+
+        // Check for date range in the data
+        if (programmes.length > 0) {
+            const dates = programmes.map(p => new Date(p.start));
+            const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+            const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+            logger.info(`Programme date range: ${minDate.toISOString()} to ${maxDate.toISOString()}`);
         }
     } catch (error) {
         logger.error(`Error parsing XMLTV: ${error}`);
@@ -127,23 +196,35 @@ async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
 }
 
 function parseDate(dateString: string): Date {
-    const [datePart, timePart, offsetPart] = dateString.split(' ');
-    if (!datePart) {
-        throw new Error('Invalid date string format');
+    // Split by space to separate timestamp from timezone offset
+    const parts = dateString.split(' ');
+
+    // Extract the timestamp and offset
+    const timestamp = parts[0];
+    const offsetPart = parts[1];
+
+    if (!timestamp || timestamp.length < 14) {
+        throw new Error(`Invalid date string format: ${dateString}`);
     }
-    const year = parseInt(datePart.slice(0, 4));
-    const month = parseInt(datePart.slice(4, 6)) - 1;
-    const day = parseInt(datePart.slice(6, 8));
-    if (!timePart) {
-        throw new Error('Invalid date string format');
+
+    // Extract date parts from the timestamp
+    const year = parseInt(timestamp.slice(0, 4));
+    const month = parseInt(timestamp.slice(4, 6)) - 1; // JS months are 0-indexed
+    const day = parseInt(timestamp.slice(6, 8));
+
+    // Extract time parts from the timestamp
+    const hour = parseInt(timestamp.slice(8, 10));
+    const minute = parseInt(timestamp.slice(10, 12));
+    const second = parseInt(timestamp.slice(12, 14));
+
+    // Handle timezone offset
+    let offset = 0;
+    if (offsetPart) {
+        const offsetSign = offsetPart[0] === '+' ? 1 : -1;
+        const offsetHour = parseInt(offsetPart.slice(1, 3) || '0');
+        const offsetMinute = parseInt(offsetPart.slice(3, 5) || '0');
+        offset = offsetSign * (offsetHour * 60 + offsetMinute) * 60000;
     }
-    const hour = parseInt(timePart.slice(0, 2));
-    const minute = parseInt(timePart.slice(2, 4));
-    const second = parseInt(timePart.slice(4, 6));
-    const offsetSign = offsetPart?.[0] === '+' ? 1 : -1;
-    const offsetHour = parseInt(offsetPart?.slice(1, 3) || '0');
-    const offsetMinute = parseInt(offsetPart?.slice(3, 5) || '0');
-    const offset = offsetSign * (offsetHour * 60 + offsetMinute) * 60000;
 
     const date = new Date(Date.UTC(year, month, day, hour, minute, second));
     return new Date(date.getTime() - offset);
@@ -163,7 +244,7 @@ async function fetchWithRetry(url: string, cacheFileName: string): Promise<Buffe
             }
         } catch (error) {
             if (axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || (error.response?.status ?? 0) >= 500)) {
-                logger.warning(`Connection error on attempt ${attempt}: ${error.message}`);
+                logger.warn(`Connection error on attempt ${attempt}: ${error.message}`);
                 if (attempt < maxRetries) {
                     logger.info(`Retrying in ${retryDelay} seconds...`);
                     await new Promise(resolve => setTimeout(resolve, retryDelay * 1000));

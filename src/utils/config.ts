@@ -33,7 +33,6 @@ class Config {
         this.DEBUG = env.DEBUG?.trim().toLowerCase() === 'true';
         this.CACHE_DIR = env.CACHE_DIR?.trim() || (this.RAM_CACHE ? '/dev/shm/orbiscast' : '../cache');
 
-        // Log the loaded GUILD ID for debugging
         logger.info(`Loaded GUILD ID: ${this.GUILD}`);
 
         if (!this.validateEnvVars()) {
@@ -44,11 +43,13 @@ class Config {
 
         logger.info("Successfully loaded environment variables");
         logger.info(`Debug mode is set to: ${this.DEBUG}`);
-
-        // Log the configuration values for debugging
         logger.debug(`Configuration: ${JSON.stringify(this.getSanitizedConfig(), null, 2)}`);
     }
 
+    /**
+     * Validates that all required environment variables are set
+     * @returns True if all required variables are set, false otherwise
+     */
     private validateEnvVars(): boolean {
         const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD', 'DEFAULT_TEXT_CHANNEL'];
         let allVarsSet = true;
@@ -63,6 +64,10 @@ class Config {
         return allVarsSet;
     }
 
+    /**
+     * Creates a sanitized version of the config for logging, with sensitive values hidden
+     * @returns Sanitized configuration object
+     */
     private getSanitizedConfig(): Record<string, any> {
         const sanitized = { ...this };
 
@@ -83,8 +88,14 @@ class Config {
         return sanitized;
     }
 
-    private obfuscateString(input: string, full_obfucscation: boolean = false): string {
-        const obfuscationLength = full_obfucscation ? input.length : input.length - 4;
+    /**
+     * Obfuscates a string for display in logs
+     * @param input - The string to obfuscate
+     * @param full_obfuscation - Whether to obfuscate the entire string or leave the last 4 characters visible
+     * @returns Obfuscated string
+     */
+    private obfuscateString(input: string, full_obfuscation: boolean = false): string {
+        const obfuscationLength = full_obfuscation ? input.length : input.length - 4;
         return '*'.repeat(obfuscationLength) + input.slice(obfuscationLength);
     }
 }

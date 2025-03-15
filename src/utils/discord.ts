@@ -1,10 +1,14 @@
-import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, GuildMember, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from '../modules/database';
 import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand, handleProgrammeCommand } from '../modules/commands';
 
 const logger = getLogger();
+
+/**
+ * Discord client instance with configured intents and partials
+ */
 export const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
     partials: [Partials.Channel],
@@ -77,6 +81,58 @@ client.on('interactionCreate', async interaction => {
             await handleRefreshCommand(interaction);
         } else if (commandName === 'programme') {
             await handleProgrammeCommand(interaction);
+        }
+    } else if (interaction.isButton()) {
+        // Handle button interactions globally
+        const { customId } = interaction;
+
+        if (customId === 'show_programme') {
+            // This is handled in the collector in the stream command
+        } else if (customId === 'stop_stream') {
+            if (!interaction.isButton()) return;
+            await interaction.deferUpdate();
+
+            const { executeStopStream } = require('../modules/commands/stop');
+            const result = await executeStopStream();
+
+            await interaction.followUp({
+                content: result.message,
+                ephemeral: false
+            });
+        } else if (customId.startsWith('play_channel_')) {
+            if (!interaction.isButton()) return;
+            await interaction.deferUpdate();
+
+            const channelName = customId.replace('play_channel_', '');
+            const { executeStreamChannel } = require('../modules/commands/stream');
+
+            if (interaction.member && 'voice' in interaction.member) {
+                const member = interaction.member as GuildMember;
+                const voiceChannel = member.voice.channel;
+
+                if (!voiceChannel) {
+                    await interaction.followUp({
+                        content: 'You need to be in a voice channel to play this channel.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+                if (result.success) {
+                    await interaction.followUp({
+                        content: result.message,
+                        embeds: result.embed ? [result.embed] : [],
+                        components: result.components || []
+                    });
+                } else {
+                    await interaction.followUp({
+                        content: result.message,
+                        ephemeral: true
+                    });
+                }
+            }
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;

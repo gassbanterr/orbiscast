@@ -12,6 +12,10 @@ let currentChannelEntry: ChannelEntry | null = null;
 let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
 let streamAloneTime: number = 0;
 
+/**
+ * Initializes the streaming client
+ * Logs in the streamer client for video streaming capabilities
+ */
 export async function initializeStreamer() {
     try {
         await loginStreamer();
@@ -20,6 +24,10 @@ export async function initializeStreamer() {
     }
 }
 
+/**
+ * Re-authenticates the user client by logging out and back in
+ * Useful for refreshing authentication tokens
+ */
 export async function relogUser() {
     try {
         await logoutStreamer();
@@ -30,6 +38,9 @@ export async function relogUser() {
     }
 }
 
+/**
+ * Logs out the streamer client if currently logged in
+ */
 export async function logoutStreamer() {
     if (!streamer.client.isReady()) {
         logger.debug('Streamer client is not logged in');
@@ -39,6 +50,9 @@ export async function logoutStreamer() {
     logger.info('Streamer client logged out successfully');
 }
 
+/**
+ * Logs in the streamer client using the user token
+ */
 export async function loginStreamer() {
     if (streamer.client.isReady()) {
         logger.debug('Streamer client is already logged in');
@@ -48,7 +62,11 @@ export async function loginStreamer() {
     logger.info('Streamer client logged in successfully');
 }
 
-
+/**
+ * Joins a voice channel in the specified guild
+ * @param guildId - Discord guild ID
+ * @param channelId - Voice channel ID to join
+ */
 export async function joinVoiceChannel(guildId: string, channelId: string) {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in.');
@@ -72,13 +90,18 @@ export async function joinVoiceChannel(guildId: string, channelId: string) {
     }
 }
 
+/**
+ * Stops the stream and leaves the current voice channel
+ */
 export async function leaveVoiceChannel() {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
         return;
     }
     try {
-        await stopStreaming();
+        if (currentChannelEntry) {
+            await stopStreaming();
+        }
         streamer.leaveVoice();
         logger.info('Stopped video stream and disconnected from the voice channel');
     } catch (error) {
@@ -86,40 +109,54 @@ export async function leaveVoiceChannel() {
     }
 }
 
+/**
+ * Starts monitoring spectators in the voice channel
+ * Automatically stops the stream if there are no viewers for a specified time
+ * @returns Cleanup function to stop monitoring
+ */
 function startSpectatorMonitoring(): () => void {
-    // Reset the alone time counter
     streamAloneTime = 0;
-
-    // Clear any existing monitor
     if (streamSpectatorMonitor) {
         clearInterval(streamSpectatorMonitor);
         streamSpectatorMonitor = null;
     }
 
-    // Start a new monitor
     streamSpectatorMonitor = setInterval(() => {
-        const channelId = streamer.voiceConnection?.channelId;
-        if (!channelId) return;
-
-        const channel = streamer.client.channels.cache.get(channelId);
-        if (!channel || !channel.isVoice()) return;
-
-        const members = channel.members.filter(member => !member.user.bot).size;
-
-        // Check if only the bot is in the channel
-        if (members === 1) {
-            streamAloneTime += 10;
-            logger.debug(`No spectators for ${streamAloneTime} seconds`);
-
-            if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
-                logger.info(`No spectators for ${config.DEFAULT_STREAM_TIMEOUT} ${config.DEFAULT_STREAM_TIMEOUT > 1 ? 'minutes' : 'minute'}. Stopping stream.`);
-                stopStreaming();
-                leaveVoiceChannel();
+        try {
+            const channelId = streamer.voiceConnection?.channelId;
+            if (!channelId) {
+                logger.debug('No active voice connection found during monitoring');
+                return;
             }
-        } else {
-            streamAloneTime = 0;
+
+            const channel = streamer.client.channels.cache.get(channelId);
+            if (!channel || !channel.isVoice()) {
+                logger.debug('Could not retrieve valid voice channel during monitoring');
+                return;
+            }
+
+            const members = channel.members.filter(member => !member.user.bot).size;
+
+            if (members === 0) {
+                streamAloneTime += 10;
+                logger.debug(`No spectators for ${streamAloneTime} seconds`);
+
+                if (streamAloneTime >= config.DEFAULT_STREAM_TIMEOUT * 60) {
+                    logger.info(`No spectators for ${config.DEFAULT_STREAM_TIMEOUT} ${config.DEFAULT_STREAM_TIMEOUT > 1 ? 'minutes' : 'minute'}. Stopping stream.`);
+
+                    stopStreaming().then(() => {
+                        return leaveVoiceChannel();
+                    }).catch(err => {
+                        logger.error(`Error during automated stream cleanup: ${err}`);
+                    });
+                }
+            } else {
+                streamAloneTime = 0;
+            }
+        } catch (error) {
+            logger.error(`Error in spectator monitoring: ${error}`);
         }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
 
     return () => {
         if (streamSpectatorMonitor) {
@@ -131,6 +168,10 @@ function startSpectatorMonitoring(): () => void {
     };
 }
 
+/**
+ * Starts streaming the specified channel to a Discord voice channel
+ * @param channelEntry - Channel information containing stream URL and metadata
+ */
 export async function startStreaming(channelEntry: ChannelEntry) {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');
@@ -157,7 +198,6 @@ export async function startStreaming(channelEntry: ChannelEntry) {
 
         logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);
 
-        // Start monitoring spectators and get the cleanup function
         const cleanupMonitoring = startSpectatorMonitoring();
 
         try {
@@ -165,7 +205,6 @@ export async function startStreaming(channelEntry: ChannelEntry) {
                 type: "go-live",
             }, abortController.signal);
         } catch (error) {
-            // Clean up monitoring if stream fails
             cleanupMonitoring();
             throw error;
         }
@@ -175,6 +214,9 @@ export async function startStreaming(channelEntry: ChannelEntry) {
     }
 }
 
+/**
+ * Stops the current stream and cleans up resources
+ */
 export async function stopStreaming() {
     if (!streamer.client.isReady()) {
         logger.error('Streamer client is not logged in');

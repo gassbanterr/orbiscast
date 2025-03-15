@@ -26,6 +26,10 @@ const logger = createLogger({
     ]
 });
 
+/**
+ * Returns a configured logger instance for application use
+ * @returns Logger instance with "app" label
+ */
 export function getLogger() {
     return logger.child({ label: "app" });
 }

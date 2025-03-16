@@ -15,7 +15,10 @@ The bot was made to simplify watch parties with friends. It is also useful for t
 
 This project is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
 
-_I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only._
+> [!CAUTION]
+> I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only.
+>
+> _Using self-bots is against [Discord's terms of service](https://discord.com/guidelines) and may result in account termination. Use at your own risk._
 
 ## Installation
 
@@ -37,7 +40,8 @@ You will need to set a few things up before you can run the bot:
     - `applications.commands`
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
-_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data._
+> [!Warning]
+> Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.
 
 ### Docker
 
@@ -105,7 +109,7 @@ The application uses the following environment variables, which should be define
 
 ### Discord Configuration
 
-The reason we have a `bot` and a `user` token is because the bot token is used to connect to the Discord API, while the user token is used to join the voice channel and stream video.
+The reason we have a `bot` and a `user` token is because the current Discord API does not allow bots to stream video. The bot is used to control the user, which is the one that actually streams the video.
 
 | Variable              | Description                                      | Example/Default                          | Required |
 |-----------------------|--------------------------------------------------|------------------------------------------|----------|

@@ -148,9 +148,10 @@ export async function handleListCommand(interaction: CommandInteraction) {
             return;
         }
 
+        // Only include embeds when 'all' option is used
         const reply = await interaction.reply({
             content: result.message,
-            embeds: result.embed ? [result.embed] : [],
+            embeds: result.isAllChannels && result.embed ? [result.embed] : [],
             components: result.components || [],
             flags: MessageFlags.Ephemeral
         });

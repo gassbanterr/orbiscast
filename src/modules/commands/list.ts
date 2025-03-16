@@ -159,6 +159,11 @@ export async function handleListCommand(interaction: CommandInteraction) {
         setTimeout(async () => {
             try {
                 const refreshedResult = await generateChannelList(pageOption);
+
+                if (!interaction.command?.createdAt || interaction.command.createdAt.getTime() < Date.now() - 60 * 60 * 1000) {
+                    return;
+                }
+
                 await interaction.editReply({
                     content: refreshedResult.message,
                     embeds: refreshedResult.embed ? [refreshedResult.embed] : [],

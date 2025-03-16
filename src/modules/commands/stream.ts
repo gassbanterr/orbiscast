@@ -6,6 +6,7 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import { generateProgrammeInfo } from './programme';
 import { executeStopStream } from './stop';
+import { getCurrentChannelEntry } from '../streaming';
 
 const logger = getLogger();
 const PROGRAMME_BUTTON_ID = 'show_programme';
@@ -202,12 +203,19 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
         // Refresh buttons before they expire
         setTimeout(async () => {
             try {
+
+                if (channelName !== getCurrentChannelEntry()?.tvg_name) {
+                    logger.info(`Stream for ${channelName} is no longer active, skipping button refresh.`);
+                    return;
+                }
+
                 const refreshedResult = await executeStreamChannel(channelName, voiceChannel.id);
                 await interaction.editReply({
                     content: refreshedResult.message,
                     embeds: refreshedResult.embed ? [refreshedResult.embed] : [],
                     components: refreshedResult.components || []
                 });
+                logger.info(`Buttons refreshed for stream: ${channelName}`);
             } catch (error) {
                 logger.error(`Error refreshing buttons: ${error}`);
             }

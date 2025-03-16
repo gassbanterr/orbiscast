@@ -136,12 +136,6 @@ export async function generateChannelList(pageOption: string | number | undefine
  */
 export async function handleListCommand(interaction: CommandInteraction) {
     try {
-        const options = interaction.options.data.map(option => ({
-            name: option.name,
-            value: option.value
-        }));
-        logger.info(`Received command: list with options: ${JSON.stringify(options)} from ${interaction.user.tag}`);
-
         const rawPageOption = interaction.options.get('page')?.value;
         const pageOption = typeof rawPageOption === 'number' || rawPageOption === 'all' ? rawPageOption : undefined;
         const result = await generateChannelList(pageOption);

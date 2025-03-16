@@ -218,7 +218,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                     ephemeral: true // Only visible to the user who clicked
                 });
             } else if (i.customId === STOP_BUTTON_ID) {
-                // await i.deferUpdate(); // not needed as we're not sending a follow-up message
                 logger.info(`Stop button clicked for stream: ${channelName}`);
                 const stopResult = await executeStopStream();
 
@@ -235,6 +234,22 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                     content: 'Stream stopped successfully.',
                     ephemeral: false
                 });
+            } else if (i.customId.startsWith('play_channel_')) {
+                const playChannelName = i.customId.replace('play_channel_', '');
+                const playResult = await executeStreamChannel(playChannelName, voiceChannel.id);
+
+                if (playResult.success) {
+                    await i.followUp({
+                        content: playResult.message,
+                        embeds: playResult.embed ? [playResult.embed] : [],
+                        components: playResult.components || []
+                    });
+                } else {
+                    await i.followUp({
+                        content: playResult.message,
+                        ephemeral: true
+                    });
+                }
             }
         } catch (error) {
             logger.error(`Error handling button interaction: ${error}`);

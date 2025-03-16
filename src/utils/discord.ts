@@ -3,7 +3,6 @@ import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from '../modules/database';
 import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand, handleProgrammeCommand } from '../modules/commands';
-import { handlePlayChannelButton } from '../modules/commands/list';
 
 const logger = getLogger();
 
@@ -70,10 +69,6 @@ client.on('interactionCreate', async interaction => {
             await handleRefreshCommand(interaction);
         } else if (commandName === 'programme') {
             await handleProgrammeCommand(interaction);
-        }
-    } else if (interaction.isButton()) {
-        if (interaction.customId.startsWith('play_channel_')) {
-            await handlePlayChannelButton(interaction);
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;

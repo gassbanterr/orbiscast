@@ -3,7 +3,6 @@ import { getLogger } from './logger';
 import { config } from './config';
 import { getChannelEntries } from '../modules/database';
 import { handleStreamCommand, handleStopCommand, handleListCommand, handleRefreshCommand, handleProgrammeCommand } from '../modules/commands';
-import { handleResetCommand } from '../modules/commands/reset';
 
 const logger = getLogger();
 
@@ -76,8 +75,6 @@ client.on('interactionCreate', async interaction => {
             await handleRefreshCommand(interaction);
         } else if (commandName === 'programme') {
             await handleProgrammeCommand(interaction);
-        } else if (commandName === 'reset') {
-            await handleResetCommand(interaction);
         }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;

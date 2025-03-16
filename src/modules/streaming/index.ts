@@ -274,35 +274,3 @@ export async function stopStreaming() {
     }
 }
 
-/**
- * Resets the streamer client and all associated resources
- * Useful for cleaning up after a crash or error
- * @returns Promise that resolves when cleanup is complete
- */
-export async function resetStreamer() {
-    try {
-        if (streamer.voiceConnection) {
-            try {
-                streamer.leaveVoice();  // this also stops the stream
-            } catch (err) {
-                logger.debug(`Error while leaving voice: ${err}`);
-            }
-        }
-
-        if (streamer.client.isReady()) {
-            try {
-                streamer.client.destroy();
-            } catch (err) {
-                logger.debug(`Error while destroying client: ${err}`);
-            }
-        }
-        logger.debug('Creating new streamer instance');
-        streamer = new Streamer(new Client());
-
-        await initializeStreamer();
-        logger.info('Streamer client has been reset successfully');
-    } catch (error) {
-        logger.error(`Error resetting streamer: ${error}`);
-    }
-}
-

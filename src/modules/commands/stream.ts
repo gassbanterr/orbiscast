@@ -226,11 +226,10 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
         });
 
         collector.on('collect', async (i) => {
-            logger.debug(`Button clicked: ${i.customId}`);
             try {
                 await i.deferUpdate();
                 if (i.customId === PROGRAMME_BUTTON_ID) {
-                    logger.info(`Programme button clicked for channel: ${channelName}`);
+                    logger.info(`Programme button clicked for channel: ${channelName} by ${i.user.tag}`);
                     const programmeInfo = await generateProgrammeInfo(channelName);
 
                     if (!programmeInfo.success) {
@@ -247,7 +246,7 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                         ephemeral: true // Only visible to the user who clicked
                     });
                 } else if (i.customId === STOP_BUTTON_ID) {
-                    logger.info(`Stop button clicked for stream: ${channelName}`);
+                    logger.info(`Stop button clicked for stream: ${channelName} by ${i.user.tag}`);
                     const stopResult = await executeStopStream();
 
                     if (!stopResult.success) {

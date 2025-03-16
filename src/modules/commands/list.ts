@@ -136,6 +136,12 @@ export async function generateChannelList(pageOption: string | number | undefine
  */
 export async function handleListCommand(interaction: CommandInteraction) {
     try {
+        const options = interaction.options.data.map(option => ({
+            name: option.name,
+            value: option.value
+        }));
+        logger.info(`Received command: list with options: ${JSON.stringify(options)} from ${interaction.user.tag}`);
+
         const rawPageOption = interaction.options.get('page')?.value;
         const pageOption = typeof rawPageOption === 'number' || rawPageOption === 'all' ? rawPageOption : undefined;
         const result = await generateChannelList(pageOption);
@@ -199,6 +205,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
                         return;
                     }
 
+                    logger.info(`User ${member.user.tag} requested to play channel ${channelName} in the list command`);
                     const result = await executeStreamChannel(channelName, voiceChannel.id);
 
                     if (result.success) {

@@ -148,9 +148,10 @@ export async function handleListCommand(interaction: CommandInteraction) {
             return;
         }
 
+        // Only include embeds when 'all' option is used
         const reply = await interaction.reply({
             content: result.message,
-            embeds: result.embed ? [result.embed] : [],
+            embeds: result.isAllChannels && result.embed ? [result.embed] : [],
             components: result.components || [],
             flags: MessageFlags.Ephemeral
         });
@@ -172,7 +173,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
                     if (!voiceChannel) {
                         await i.followUp({
                             content: 'You need to be in a voice channel to play this channel.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                         return;
                     }
@@ -189,7 +190,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
                     } else {
                         await i.followUp({
                             content: result.message,
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
                 } else if (i.customId === 'stop_stream') {
@@ -210,7 +211,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
         try {
             await interaction.reply({
                 content: 'An error occurred while processing your request.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (replyError) {
             logger.error(`Error sending reply: ${replyError}`);
@@ -235,7 +236,7 @@ export async function handlePlayChannelButton(interaction: ButtonInteraction) {
         if (!voiceChannel) {
             await interaction.followUp({
                 content: 'You need to be in a voice channel to play this channel.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
@@ -252,7 +253,7 @@ export async function handlePlayChannelButton(interaction: ButtonInteraction) {
         } else {
             await interaction.followUp({
                 content: result.message,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }
@@ -276,7 +277,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
             if (!voiceChannel) {
                 await interaction.followUp({
                     content: 'You need to be in a voice channel to play this channel.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
@@ -293,7 +294,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
             } else {
                 await interaction.followUp({
                     content: result.message,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         } else if (interaction.customId === 'stop_stream') {
@@ -310,7 +311,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         try {
             await interaction.followUp({
                 content: 'An error occurred while processing your request.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (followUpError) {
             logger.error(`Error sending follow-up message: ${followUpError}`);

@@ -6,7 +6,7 @@ import { config } from '../../utils/config';
 import type { ChannelEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
-const streamer = new Streamer(new Client());
+let streamer = new Streamer(new Client());
 let abortController = new AbortController();
 let currentChannelEntry: ChannelEntry | null = null;
 let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
@@ -140,6 +140,7 @@ function startSpectatorMonitoring(): () => void {
         clearInterval(streamSpectatorMonitor);
         streamSpectatorMonitor = null;
     }
+    logger.debug('Starting spectator monitoring');
 
     streamSpectatorMonitor = setInterval(() => {
         try {
@@ -155,8 +156,8 @@ function startSpectatorMonitoring(): () => void {
                 return;
             }
 
-            const members = channel.members.filter(member => !member.user.bot).size;
-
+            // we don't count bots as spectators, and we don't count the bot itself
+            const members = channel.members.filter(member => !member.user.bot).size - 1;
             if (members === 0) {
                 streamAloneTime += 10;
                 logger.debug(`No spectators for ${streamAloneTime} seconds`);
@@ -199,6 +200,9 @@ export async function startStreaming(channelEntry: ChannelEntry) {
     }
 
     try {
+        logger.info(`Stopping any possible existing stream.`);
+        await stopStreaming();
+
         const { command, output } = prepareStream(channelEntry.url, {
             noTranscoding: false,
             minimizeLatency: true,
@@ -224,6 +228,9 @@ export async function startStreaming(channelEntry: ChannelEntry) {
             await playStream(output, streamer, {
                 type: "go-live",
             }, abortController.signal);
+
+            // Ensure cleanup happens after stream ends normally
+            cleanupMonitoring();
         } catch (error) {
             cleanupMonitoring();
             throw error;
@@ -266,3 +273,4 @@ export async function stopStreaming() {
         logger.error(`Error stopping stream: ${error}`);
     }
 }
+

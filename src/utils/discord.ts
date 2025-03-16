@@ -46,6 +46,7 @@ client.once('ready', async () => {
                 )),
         new SlashCommandBuilder().setName('programme').setDescription('Show programme guide for a channel')
             .addStringOption(option => option.setName('channel').setDescription('The channel name').setAutocomplete(true).setRequired(true)),
+        new SlashCommandBuilder().setName('reset').setDescription('Reset the streaming client to fix connection issues'),
     ].map(command => command.toJSON());
 
     try {

@@ -6,6 +6,8 @@
 [![GitHub issues](https://img.shields.io/github/issues/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/pulls)
 [![GitHub license](https://img.shields.io/github/license/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/blob/main/LICENSE.md)
+[![Release](https://img.shields.io/github/v/release/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/releases)
+[![Repo size](https://img.shields.io/github/repo-size/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast?sort=date)](https://hub.docker.com/r/zbejas/orbiscast)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
 
@@ -15,7 +17,10 @@ The bot was made to simplify watch parties with friends. It is also useful for t
 
 This project is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
 
-_I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only._
+> [!CAUTION]
+> I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only.
+>
+> _Using self-bots is against [Discord's terms of service](https://discord.com/guidelines) and may result in account termination. Use at your own risk._
 
 ## Installation
 
@@ -37,7 +42,8 @@ You will need to set a few things up before you can run the bot:
     - `applications.commands`
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
-_Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data._
+> [!Warning]
+> Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.
 
 ### Docker
 
@@ -105,7 +111,7 @@ The application uses the following environment variables, which should be define
 
 ### Discord Configuration
 
-The reason we have a `bot` and a `user` token is because the bot token is used to connect to the Discord API, while the user token is used to join the voice channel and stream video.
+The reason we have a `bot` and a `user` token is because the current Discord API does not allow bots to stream video. The bot is used to control the user, which is the one that actually streams the video.
 
 | Variable              | Description                                      | Example/Default                          | Required |
 |-----------------------|--------------------------------------------------|------------------------------------------|----------|
@@ -115,12 +121,20 @@ The reason we have a `bot` and a `user` token is because the bot token is used t
 
 ## Commands
 
-The bot can be controlled using the following commands in the text channel:
+The bot can be controlled using the following commands:
 
-- `/stream <channel_name>`: Start streaming the specified channel.
-- `/programme <channel_name>`: Get the current programme for the specified channel. This will return the next 10 programmes.
-- `/stop`: Stop the current stream.
-- `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
-- `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".
+| Command | Description |
+|---------|-------------|
+| `/stream <channel>` | Start streaming the specified channel. |
+| `/programme <channel>` | Get the current programme for the specified channel. This will return the next 10 programmes. |
+| `/stop` | Stop the current stream. |
+| `/list <page>` | List all available channels. Page is optional, paging is done in groups of 25. |
+| `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
 
-_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time. If you have more than 25 channels, you will have to type the channel name manually. The channel name is case-sensitive. This is a limitation of the Discord API._
+_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/list` command to see all available channels, and then either navigate from there or use the channel name directly._
+
+## Known Issues
+
+If your issue is not listed here, please report it in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
+
+- The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.

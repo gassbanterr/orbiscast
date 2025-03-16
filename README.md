@@ -123,10 +123,13 @@ The reason we have a `bot` and a `user` token is because the current Discord API
 
 The bot can be controlled using the following commands in the text channel:
 
-- `/stream <channel_name>`: Start streaming the specified channel.
-- `/programme <channel_name>`: Get the current programme for the specified channel. This will return the next 10 programmes.
-- `/stop`: Stop the current stream.
-- `/list <page>`: List all available channels. Page is optional, paging is done in groups of 25.
-- `/refresh <type>`: Refresh the specified data. Type can be "all", "channels", or "programme".
+| Command | Description |
+|---------|-------------|
+| `/stream <channel>` | Start streaming the specified channel. |
+| `/programme <channel>` | Get the current programme for the specified channel. This will return the next 10 programmes. |
+| `/stop` | Stop the current stream. |
+| `/list <page>` | List all available channels. Page is optional, paging is done in groups of 25. |
+| `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
+| `/reset` | Reset the bot. This will stop the current stream and hopefully fix any issues, so you won't have to restart the bot. |
 
-_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time. If you have more than 25 channels, you will have to type the channel name manually. The channel name is case-sensitive. This is a limitation of the Discord API._
+_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/list` command to see all available channels, and then either navigate from there or use the channel name directly._

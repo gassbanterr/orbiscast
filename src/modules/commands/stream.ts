@@ -112,27 +112,61 @@ export async function executeStreamChannel(
                 );
             }
 
-            if (nextProgramme) {
-                const startDate = nextProgramme.start
-                    ? new Date(nextProgramme.start)
-                    : new Date(nextProgramme.start_timestamp ? nextProgramme.start_timestamp * 1000 : Date.now());
-                const stopDate = nextProgramme.stop
-                    ? new Date(nextProgramme.stop)
-                    : new Date(nextProgramme.stop_timestamp ? nextProgramme.stop_timestamp * 1000 : Date.now());
+            // Show different number of upcoming shows based on whether we include buttons
+            if (includeInteractionButtons) {
+                // Just show the next program when buttons are included
+                if (nextProgramme) {
+                    const startDate = nextProgramme.start
+                        ? new Date(nextProgramme.start)
+                        : new Date(nextProgramme.start_timestamp ? nextProgramme.start_timestamp * 1000 : Date.now());
+                    const stopDate = nextProgramme.stop
+                        ? new Date(nextProgramme.stop)
+                        : new Date(nextProgramme.stop_timestamp ? nextProgramme.stop_timestamp * 1000 : Date.now());
 
-                const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
+                    const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
 
-                streamEmbed.addFields({
-                    name: '⏭️ UP NEXT',
-                    value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
-                    inline: false
-                });
+                    streamEmbed.addFields({
+                        name: '⏭️ UP NEXT',
+                        value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
+                        inline: false
+                    });
+                } else {
+                    streamEmbed.addFields(
+                        { name: '⏭️ UP NEXT', value: 'No upcoming programme information available', inline: false }
+                    );
+                }
             } else {
-                streamEmbed.addFields(
-                    { name: '⏭️ UP NEXT', value: 'No upcoming programme information available', inline: false }
-                );
+                logger.warn(`Detected channel change from the list command. Interaction buttons are not yet implemented. Listing 10 upcoming programmes.`);
+                // Show more upcoming programs when buttons aren't included
+                if (nextProgrammes && nextProgrammes.length > 0) {
+                    const upcomingCount = Math.min(10, nextProgrammes.length);
+                    const upcomingPrograms = nextProgrammes.slice(0, upcomingCount);
+
+                    const upcomingFieldName = '⏭️ UPCOMING';
+
+                    const upcomingListItems = upcomingPrograms.map(prog => {
+                        const startDate = prog.start
+                            ? new Date(prog.start)
+                            : new Date(prog.start_timestamp ? prog.start_timestamp * 1000 : Date.now());
+
+                        const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                        const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
+
+                        return `• **${prog.title}** at ${startTime} (in ${timeUntilStart} min)`;
+                    });
+
+                    streamEmbed.addFields({
+                        name: upcomingFieldName,
+                        value: upcomingListItems.join('\n'),
+                        inline: false
+                    });
+                } else {
+                    streamEmbed.addFields(
+                        { name: '⏭️ UPCOMING', value: 'No upcoming programme information available', inline: false }
+                    );
+                }
             }
 
             streamEmbed.setFooter({ text: 'Stream and programme information is subject to change' });
@@ -241,7 +275,7 @@ export async function executeStreamChannel(
             startStreaming(channel);
             return {
                 success: true,
-                message: `Now streaming ${channelName}`,
+                message: ``, // Empty message as we're sending the embed
                 channel: channel,
                 embed: streamEmbed,
                 components,

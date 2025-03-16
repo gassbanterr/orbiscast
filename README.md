@@ -35,10 +35,6 @@ You will need to set a few things up before you can run the bot:
   - The bot can be added following the portal instructions linked above. Make sure to include the following scopes when generating the bot invite link:
     - `bot`
     - `applications.commands`
-    - `guilds`
-    - `guild.voice_states`
-    - `guild.messages`
-    - `message_content`
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
 _Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data._
@@ -101,7 +97,7 @@ The application uses the following environment variables, which should be define
 | `PLAYLIST`         | URL to the M3U playlist.                         | `http://example.com/m3u/playlist.m3u`    | ✔        |
 | `XMLTV`            | URL to the XMLTV guide.                          | `http://example.com/xmltv/guide.xml`     | ✔        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
-| `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
+| `RAM_CACHE`        | Whether to use RAM for caching.                  | `true`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
 | `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |

@@ -1,6 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, EmbedBuilder, GuildMember, MessageFlags, ComponentType } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { getChannelEntries } from '../../modules/database';
+import { executeStreamChannel } from './stream';
+import { executeStopStream } from './stop';
 
 const logger = getLogger();
 
@@ -133,21 +135,146 @@ export async function generateChannelList(pageOption: string | number | undefine
  * @param interaction - The Discord command interaction
  */
 export async function handleListCommand(interaction: CommandInteraction) {
-    const rawPageOption = interaction.options.get('page')?.value;
-    const pageOption = typeof rawPageOption === 'number' || rawPageOption === 'all' ? rawPageOption : undefined;
-    const result = await generateChannelList(pageOption);
+    try {
+        const rawPageOption = interaction.options.get('page')?.value;
+        const pageOption = typeof rawPageOption === 'number' || rawPageOption === 'all' ? rawPageOption : undefined;
+        const result = await generateChannelList(pageOption);
 
-    if (result.embed && result.components) {
-        await interaction.reply({
+        if (!result.success) {
+            await interaction.reply({
+                content: result.message,
+                flags: MessageFlags.Ephemeral
+            });
+            return;
+        }
+
+        const reply = await interaction.reply({
             content: result.message,
-            embeds: [result.embed],
-            components: result.components,
+            embeds: result.embed ? [result.embed] : [],
+            components: result.components || [],
             flags: MessageFlags.Ephemeral
         });
-    } else {
-        await interaction.reply({
-            content: result.message,
-            flags: MessageFlags.Ephemeral
+
+        // Create a collector for button interactions
+        const collector = reply.createMessageComponentCollector({
+            componentType: ComponentType.Button,
+            time: 24 * 60 * 60 * 1000 // 24 hours
         });
+
+        collector.on('collect', async (i) => {
+            logger.debug(`Button clicked: ${i.customId}`);
+            try {
+                await i.deferUpdate();
+                if (i.customId.startsWith('play_channel_')) {
+                    const channelName = i.customId.replace('play_channel_', '');
+                    const member = i.member as GuildMember;
+                    const voiceChannel = member.voice.channel;
+
+                    if (!voiceChannel) {
+                        await i.followUp({
+                            content: 'You need to be in a voice channel to play this channel.',
+                            ephemeral: true
+                        });
+                        return;
+                    }
+
+                    const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+                    if (result.success) {
+                        await i.followUp({
+                            content: result.message,
+                            embeds: result.embed ? [result.embed] : [],
+                            components: result.components || []
+                        });
+                    } else {
+                        await i.followUp({
+                            content: result.message,
+                            ephemeral: true
+                        });
+                    }
+                } else if (i.customId === 'stop_stream') {
+                    const result = await executeStopStream();
+
+                    await i.followUp({
+                        content: result.message,
+                        ephemeral: false
+                    });
+                }
+            } catch (error) {
+                logger.error(`Error handling button interaction: ${error}`);
+                try {
+                    await i.followUp({
+                        content: 'An error occurred while processing your request.',
+                        ephemeral: true
+                    });
+                } catch (followUpError) {
+                    logger.error(`Error sending follow-up message: ${followUpError}`);
+                }
+            }
+        });
+    } catch (error) {
+        logger.error(`Error handling list command: ${error}`);
+        try {
+            await interaction.reply({
+                content: 'An error occurred while processing your request.',
+                ephemeral: true
+            });
+        } catch (replyError) {
+            logger.error(`Error sending reply: ${replyError}`);
+        }
     }
+}
+
+/**
+ * Handles the play channel button interaction
+ * @param interaction - The Discord button interaction
+ */
+export async function handlePlayChannelButton(interaction: ButtonInteraction) {
+    await interaction.deferUpdate();
+
+    const customId = interaction.customId;
+    const channelName = customId.replace('play_channel_', '');
+
+    if (interaction.member && 'voice' in interaction.member) {
+        const member = interaction.member as GuildMember;
+        const voiceChannel = member.voice.channel;
+
+        if (!voiceChannel) {
+            await interaction.followUp({
+                content: 'You need to be in a voice channel to play this channel.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+        if (result.success) {
+            await interaction.followUp({
+                content: result.message,
+                embeds: result.embed ? [result.embed] : [],
+                components: result.components || []
+            });
+        } else {
+            await interaction.followUp({
+                content: result.message,
+                ephemeral: true
+            });
+        }
+    }
+}
+
+/**
+ * Handles the stop stream button interaction
+ * @param interaction - The Discord button interaction
+ */
+export async function handleStopStreamButton(interaction: ButtonInteraction) {
+    await interaction.deferUpdate();
+
+    const result = await executeStopStream();
+
+    await interaction.followUp({
+        content: result.message,
+        ephemeral: false
+    });
 }

@@ -14,11 +14,7 @@ export async function downloadCacheAndFillDb(force = false): Promise<void> {
     await fillDbChannels(force);
     await fillDbProgrammes(force);
     logger.debug('Finished parsing');
-
-    if (!config.DEBUG) {
-        await clearCache();
-    }
-
+    await clearCache();
     scheduleIPTVRefresh();
 }
 

@@ -132,3 +132,9 @@ The bot can be controlled using the following commands:
 | `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
 
 _The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/list` command to see all available channels, and then either navigate from there or use the channel name directly._
+
+## Known Issues
+
+If your issue is not listed here, please report it in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
+
+- The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.

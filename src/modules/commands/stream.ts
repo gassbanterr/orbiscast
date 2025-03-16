@@ -176,8 +176,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             await interaction.reply('Please specify a channel name.');
             return;
         }
-
-        logger.info(`Command /stream received with channel: ${channelName}.`);
         await interaction.deferReply();
 
         const member = interaction.member as GuildMember;

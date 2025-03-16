@@ -59,6 +59,11 @@ client.once('ready', async () => {
 client.on('interactionCreate', async interaction => {
     if (interaction.isCommand()) {
         const { commandName } = interaction;
+        const options = interaction.options.data.map(option => ({
+            name: option.name,
+            value: option.value
+        }));
+        logger.info(`Received command: ${commandName} with options: ${JSON.stringify(options)} from ${interaction.user.tag}`);
         if (commandName === 'stream') {
             await handleStreamCommand(interaction);
         } else if (commandName === 'stop') {

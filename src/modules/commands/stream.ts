@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ComponentType, EmbedBuilder, GuildMember } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ButtonInteraction, ComponentType, EmbedBuilder, GuildMember, Message, InteractionResponse } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
@@ -6,6 +6,7 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import { generateProgrammeInfo } from './programme';
 import { executeStopStream } from './stop';
+import { getCurrentChannelEntry } from '../streaming';
 
 const logger = getLogger();
 const PROGRAMME_BUTTON_ID = 'show_programme';
@@ -15,14 +16,22 @@ const STOP_BUTTON_ID = 'stop_stream';
  * Starts streaming the requested channel to a voice channel
  * @param channelName - Name of the channel to stream
  * @param voiceChannelId - Discord voice channel ID to stream to
+ * @param interaction - Optional Discord interaction for button collectors
+ * @param includeInteractionButtons - Whether to include buttons that require interaction handling
  * @returns Object containing success status, message, and UI components
  */
-export async function executeStreamChannel(channelName: string, voiceChannelId: string): Promise<{
+export async function executeStreamChannel(
+    channelName: string,
+    voiceChannelId: string,
+    interaction?: CommandInteraction | ButtonInteraction,
+    includeInteractionButtons: boolean = true
+): Promise<{
     success: boolean;
     message: string;
     channel?: any;
     embed?: EmbedBuilder;
     components?: ActionRowBuilder<ButtonBuilder>[];
+    setupCollector?: (message: Message | InteractionResponse) => void;
 }> {
     if (!channelName) {
         return { success: false, message: 'Please specify a channel name.' };
@@ -97,50 +106,180 @@ export async function executeStreamChannel(channelName: string, voiceChannelId: 
                     { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
                     { name: 'Description', value: description }
                 );
+            } else {
+                streamEmbed.addFields(
+                    { name: '🔴 NOW PLAYING', value: 'No current programme information available', inline: false }
+                );
             }
 
-            if (nextProgramme) {
-                const startDate = nextProgramme.start
-                    ? new Date(nextProgramme.start)
-                    : new Date(nextProgramme.start_timestamp ? nextProgramme.start_timestamp * 1000 : Date.now());
-                const stopDate = nextProgramme.stop
-                    ? new Date(nextProgramme.stop)
-                    : new Date(nextProgramme.stop_timestamp ? nextProgramme.stop_timestamp * 1000 : Date.now());
+            // Show different number of upcoming shows based on whether we include buttons
+            if (includeInteractionButtons) {
+                // Just show the next program when buttons are included
+                if (nextProgramme) {
+                    const startDate = nextProgramme.start
+                        ? new Date(nextProgramme.start)
+                        : new Date(nextProgramme.start_timestamp ? nextProgramme.start_timestamp * 1000 : Date.now());
+                    const stopDate = nextProgramme.stop
+                        ? new Date(nextProgramme.stop)
+                        : new Date(nextProgramme.stop_timestamp ? nextProgramme.stop_timestamp * 1000 : Date.now());
 
-                const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
+                    const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                    const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
 
-                streamEmbed.addFields({
-                    name: '⏭️ UP NEXT',
-                    value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
-                    inline: false
-                });
+                    streamEmbed.addFields({
+                        name: '⏭️ UP NEXT',
+                        value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
+                        inline: false
+                    });
+                } else {
+                    streamEmbed.addFields(
+                        { name: '⏭️ UP NEXT', value: 'No upcoming programme information available', inline: false }
+                    );
+                }
+            } else {
+                logger.warn(`Detected channel change from the list command. Interaction buttons are not yet implemented. Listing 10 upcoming programmes.`);
+                // Show more upcoming programs when buttons aren't included
+                if (nextProgrammes && nextProgrammes.length > 0) {
+                    const upcomingCount = Math.min(10, nextProgrammes.length);
+                    const upcomingPrograms = nextProgrammes.slice(0, upcomingCount);
+
+                    const upcomingFieldName = '⏭️ UPCOMING';
+
+                    const upcomingListItems = upcomingPrograms.map(prog => {
+                        const startDate = prog.start
+                            ? new Date(prog.start)
+                            : new Date(prog.start_timestamp ? prog.start_timestamp * 1000 : Date.now());
+
+                        const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                        const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
+
+                        return `• **${prog.title}** at ${startTime} (in ${timeUntilStart} min)`;
+                    });
+
+                    streamEmbed.addFields({
+                        name: upcomingFieldName,
+                        value: upcomingListItems.join('\n'),
+                        inline: false
+                    });
+                } else {
+                    streamEmbed.addFields(
+                        { name: '⏭️ UPCOMING', value: 'No upcoming programme information available', inline: false }
+                    );
+                }
             }
 
             streamEmbed.setFooter({ text: 'Stream and programme information is subject to change' });
 
-            // Add buttons for programme guide and stopping the stream
-            const row = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(PROGRAMME_BUTTON_ID)
-                        .setLabel('📋 Show Programme Guide')
-                        .setStyle(ButtonStyle.Primary),
-                    new ButtonBuilder()
-                        .setCustomId(STOP_BUTTON_ID)
-                        .setLabel('⏹️ Stop Stream')
-                        .setStyle(ButtonStyle.Danger)
-                );
+            let components: ActionRowBuilder<ButtonBuilder>[] = [];
+
+            // Only add interactive buttons when explicitly requested and an interaction is provided
+            if (includeInteractionButtons) {
+                // Add buttons for programme guide and stopping the stream
+                const row = new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(PROGRAMME_BUTTON_ID)
+                            .setLabel('📋 Show Programme Guide')
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(STOP_BUTTON_ID)
+                            .setLabel('⏹️ Stop Stream')
+                            .setStyle(ButtonStyle.Danger)
+                    );
+                components.push(row);
+            }
+
+            // Add a function to setup the collector only when interaction buttons are included
+            const setupCollector = includeInteractionButtons ? (message: Message | InteractionResponse) => {
+                // Create a collector for button interactions
+                const collector = message.createMessageComponentCollector({
+                    componentType: ComponentType.Button,
+                });
+
+                collector.on('collect', async (i) => {
+                    try {
+                        await i.deferUpdate();
+                        if (i.customId === PROGRAMME_BUTTON_ID) {
+                            logger.info(`Programme button clicked for channel: ${channelName} by ${i.user.tag}`);
+                            const programmeInfo = await generateProgrammeInfo(channelName);
+
+                            if (!programmeInfo.success) {
+                                await i.followUp({
+                                    content: programmeInfo.message,
+                                    ephemeral: true
+                                });
+                                return;
+                            }
+
+                            await i.followUp({
+                                content: `📺 Programme Guide for ${channelName}`,
+                                embeds: programmeInfo.embeds,
+                                ephemeral: true // Only visible to the user who clicked
+                            });
+                        } else if (i.customId === STOP_BUTTON_ID) {
+                            logger.info(`Stop button clicked for stream: ${channelName} by ${i.user.tag}`);
+                            const stopResult = await executeStopStream();
+
+                            if (!stopResult.success) {
+                                await i.followUp({
+                                    content: stopResult.message,
+                                    ephemeral: true
+                                });
+                                return;
+                            }
+
+                            await i.followUp({
+                                content: 'Stream stopped successfully.',
+                                ephemeral: false
+                            });
+                        } else if (i.customId.startsWith('play_channel_')) {
+                            const playChannelName = i.customId.replace('play_channel_', '');
+                            // Pass the current button interaction to maintain the interaction chain
+                            const playResult = await executeStreamChannel(playChannelName, voiceChannelId, i, true);
+
+                            if (playResult.success) {
+                                await i.followUp({
+                                    content: playResult.message,
+                                    embeds: playResult.embed ? [playResult.embed] : [],
+                                    components: playResult.components || []
+                                });
+
+                                // Setup collector for the new message if available
+                                if (playResult.setupCollector) {
+                                    const reply = await i.fetchReply();
+                                    playResult.setupCollector(reply);
+                                }
+                            } else {
+                                await i.followUp({
+                                    content: playResult.message,
+                                    ephemeral: true
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        logger.error(`Error handling button interaction: ${error}`);
+                        try {
+                            await i.followUp({
+                                content: 'An error occurred while processing your request.',
+                                ephemeral: true
+                            });
+                        } catch (followUpError) {
+                            logger.error(`Error sending follow-up message: ${followUpError}`);
+                        }
+                    }
+                });
+            } : undefined;
 
             // we will not await this as it's a void function, but we need to call it to start the stream
             startStreaming(channel);
             return {
                 success: true,
-                message: `Now streaming ${channelName}`,
+                message: ``, // Empty message as we're sending the embed
                 channel: channel,
                 embed: streamEmbed,
-                components: [row]
+                components,
+                setupCollector
             };
         } catch (streamError) {
             logger.error(`Stream error: ${streamError}`);
@@ -167,8 +306,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             await interaction.reply('Please specify a channel name.');
             return;
         }
-
-        logger.info(`Command /stream received with channel: ${channelName}.`);
         await interaction.deferReply();
 
         const member = interaction.member as GuildMember;
@@ -178,7 +315,7 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             return;
         }
 
-        const result = await executeStreamChannel(channelName, voiceChannel.id);
+        const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, true);
 
         if (!result.success) {
             await interaction.editReply(result.message);
@@ -192,78 +329,9 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
         });
 
         // Create a collector for button interactions
-        const collector = reply.createMessageComponentCollector({
-            componentType: ComponentType.Button,
-            time: 24 * 60 * 60 * 1000 // 24 hours
-        });
-
-        collector.on('collect', async (i) => {
-            logger.debug(`Button clicked: ${i.customId}`);
-            try {
-                await i.deferUpdate();
-                if (i.customId === PROGRAMME_BUTTON_ID) {
-                    logger.info(`Programme button clicked for channel: ${channelName}`);
-                    const programmeInfo = await generateProgrammeInfo(channelName);
-
-                    if (!programmeInfo.success) {
-                        await i.followUp({
-                            content: programmeInfo.message,
-                            ephemeral: true
-                        });
-                        return;
-                    }
-
-                    await i.followUp({
-                        content: `📺 Programme Guide for ${channelName}`,
-                        embeds: programmeInfo.embeds,
-                        ephemeral: true // Only visible to the user who clicked
-                    });
-                } else if (i.customId === STOP_BUTTON_ID) {
-                    logger.info(`Stop button clicked for stream: ${channelName}`);
-                    const stopResult = await executeStopStream();
-
-                    if (!stopResult.success) {
-                        await i.followUp({
-                            content: stopResult.message,
-                            embeds: [],
-                            ephemeral: true
-                        });
-                        return;
-                    }
-
-                    await i.followUp({
-                        content: 'Stream stopped successfully.',
-                        ephemeral: false
-                    });
-                } else if (i.customId.startsWith('play_channel_')) {
-                    const playChannelName = i.customId.replace('play_channel_', '');
-                    const playResult = await executeStreamChannel(playChannelName, voiceChannel.id);
-
-                    if (playResult.success) {
-                        await i.followUp({
-                            content: playResult.message,
-                            embeds: playResult.embed ? [playResult.embed] : [],
-                            components: playResult.components || []
-                        });
-                    } else {
-                        await i.followUp({
-                            content: playResult.message,
-                            ephemeral: true
-                        });
-                    }
-                }
-            } catch (error) {
-                logger.error(`Error handling button interaction: ${error}`);
-                try {
-                    await i.followUp({
-                        content: 'An error occurred while processing your request.',
-                        ephemeral: true
-                    });
-                } catch (followUpError) {
-                    logger.error(`Error sending follow-up message: ${followUpError}`);
-                }
-            }
-        });
+        if (result.setupCollector) {
+            result.setupCollector(reply);
+        }
     } catch (error) {
         logger.error(`Error handling stream command: ${error}`);
         try {

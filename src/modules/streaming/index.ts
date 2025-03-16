@@ -63,6 +63,14 @@ export async function loginStreamer() {
 }
 
 /**
+ * Get the current streaming channel entry
+ * @returns Channel entry object or null if not streaming
+    */
+export function getCurrentChannelEntry(): ChannelEntry | null {
+    return currentChannelEntry;
+}
+
+/**
  * Joins a voice channel in the specified guild
  * @param guildId - Discord guild ID
  * @param channelId - Voice channel ID to join

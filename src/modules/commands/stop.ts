@@ -26,7 +26,6 @@ export async function executeStopStream() {
  * @param interaction - The Discord command interaction
  */
 export async function handleStopCommand(interaction: CommandInteraction) {
-    logger.info('Command /stop received');
     const result = await executeStopStream();
     await interaction.reply({ content: result.message, flags: MessageFlags.Ephemeral });
 }

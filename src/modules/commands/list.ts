@@ -158,7 +158,6 @@ export async function handleListCommand(interaction: CommandInteraction) {
         // Create a collector for button interactions
         const collector = reply.createMessageComponentCollector({
             componentType: ComponentType.Button,
-            time: 24 * 60 * 60 * 1000 // 24 hours
         });
 
         collector.on('collect', async (i) => {
@@ -178,7 +177,8 @@ export async function handleListCommand(interaction: CommandInteraction) {
                         return;
                     }
 
-                    const result = await executeStreamChannel(channelName, voiceChannel.id);
+                    // Pass false for includeInteractionButtons when called from list
+                    const result = await executeStreamChannel(channelName, voiceChannel.id, i, false);
 
                     if (result.success) {
                         await i.followUp({
@@ -200,16 +200,9 @@ export async function handleListCommand(interaction: CommandInteraction) {
                         ephemeral: false
                     });
                 }
+                // ... handle other button types
             } catch (error) {
-                logger.error(`Error handling button interaction: ${error}`);
-                try {
-                    await i.followUp({
-                        content: 'An error occurred while processing your request.',
-                        ephemeral: true
-                    });
-                } catch (followUpError) {
-                    logger.error(`Error sending follow-up message: ${followUpError}`);
-                }
+                // ... error handling
             }
         });
     } catch (error) {
@@ -247,7 +240,8 @@ export async function handlePlayChannelButton(interaction: ButtonInteraction) {
             return;
         }
 
-        const result = await executeStreamChannel(channelName, voiceChannel.id);
+        // Pass false for includeInteractionButtons since this is called from list
+        const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, false);
 
         if (result.success) {
             await interaction.followUp({
@@ -265,16 +259,61 @@ export async function handlePlayChannelButton(interaction: ButtonInteraction) {
 }
 
 /**
- * Handles the stop stream button interaction
+ * Handles button interactions from channel list
  * @param interaction - The Discord button interaction
  */
-export async function handleStopStreamButton(interaction: ButtonInteraction) {
-    await interaction.deferUpdate();
+export async function handleButtonInteraction(interaction: ButtonInteraction) {
+    logger.debug(`Button clicked: ${interaction.customId}`);
 
-    const result = await executeStopStream();
+    try {
+        await interaction.deferUpdate();
 
-    await interaction.followUp({
-        content: result.message,
-        ephemeral: false
-    });
+        if (interaction.customId.startsWith('play_channel_')) {
+            const channelName = interaction.customId.replace('play_channel_', '');
+            const member = interaction.member as GuildMember;
+            const voiceChannel = member.voice.channel;
+
+            if (!voiceChannel) {
+                await interaction.followUp({
+                    content: 'You need to be in a voice channel to play this channel.',
+                    ephemeral: true
+                });
+                return;
+            }
+
+            // Pass false for includeInteractionButtons since this is called from list
+            const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, false);
+
+            if (result.success) {
+                await interaction.followUp({
+                    content: result.message,
+                    embeds: result.embed ? [result.embed] : [],
+                    components: result.components || []
+                });
+            } else {
+                await interaction.followUp({
+                    content: result.message,
+                    ephemeral: true
+                });
+            }
+        } else if (interaction.customId === 'stop_stream') {
+            const result = await executeStopStream();
+
+            await interaction.followUp({
+                content: result.message,
+                ephemeral: false
+            });
+        }
+        // ... handle other button types
+    } catch (error) {
+        logger.error(`Error handling button interaction: ${error}`);
+        try {
+            await interaction.followUp({
+                content: 'An error occurred while processing your request.',
+                ephemeral: true
+            });
+        } catch (followUpError) {
+            logger.error(`Error sending follow-up message: ${followUpError}`);
+        }
+    }
 }

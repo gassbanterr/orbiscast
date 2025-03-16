@@ -101,7 +101,7 @@ The application uses the following environment variables, which should be define
 | `PLAYLIST`         | URL to the M3U playlist.                         | `http://example.com/m3u/playlist.m3u`    | ✔        |
 | `XMLTV`            | URL to the XMLTV guide.                          | `http://example.com/xmltv/guide.xml`     | ✔        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
-| `RAM_CACHE`        | Whether to use RAM for caching.                  | `false`                                  | ✘        |
+| `RAM_CACHE`        | Whether to use RAM for caching.                  | `true`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
 | `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |

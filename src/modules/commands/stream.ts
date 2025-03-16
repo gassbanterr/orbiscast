@@ -161,106 +161,118 @@ export async function executeStreamChannel(channelName: string, voiceChannelId: 
  * @param interaction - The Discord command interaction
  */
 export async function handleStreamCommand(interaction: CommandInteraction) {
-    const channelName = interaction.options.get('channel')?.value as string;
-    if (!channelName) {
-        await interaction.reply('Please specify a channel name.');
-        return;
-    }
-
-    logger.info(`Command /stream received with channel: ${channelName}.`);
-    await interaction.deferReply();
-
-    const member = interaction.member as GuildMember;
-    const voiceChannel = member.voice.channel;
-    if (!voiceChannel) {
-        await interaction.editReply('You need to be in a voice channel to use this command.');
-        return;
-    }
-
-    const result = await executeStreamChannel(channelName, voiceChannel.id);
-
-    if (!result.success) {
-        await interaction.editReply(result.message);
-        return;
-    }
-
-    const reply = await interaction.editReply({
-        content: result.message,
-        embeds: result.embed ? [result.embed] : [],
-        components: result.components || []
-    });
-
-    // Create a collector for button interactions
-    const collector = reply.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 24 * 60 * 60 * 1000 // 24 hours
-    });
-
-    collector.on('collect', async (i) => {
-        logger.debug(`Button clicked: ${i.customId}`);
-        try {
-            await i.deferUpdate();
-            if (i.customId === PROGRAMME_BUTTON_ID) {
-                logger.info(`Programme button clicked for channel: ${channelName}`);
-                const programmeInfo = await generateProgrammeInfo(channelName);
-
-                if (!programmeInfo.success) {
-                    await i.followUp({
-                        content: programmeInfo.message,
-                        ephemeral: true
-                    });
-                    return;
-                }
-
-                await i.followUp({
-                    content: `📺 Programme Guide for ${channelName}`,
-                    embeds: programmeInfo.embeds,
-                    ephemeral: true // Only visible to the user who clicked
-                });
-            } else if (i.customId === STOP_BUTTON_ID) {
-                logger.info(`Stop button clicked for stream: ${channelName}`);
-                const stopResult = await executeStopStream();
-
-                if (!stopResult.success) {
-                    await i.followUp({
-                        content: stopResult.message,
-                        embeds: [],
-                        ephemeral: true
-                    });
-                    return;
-                }
-
-                await i.followUp({
-                    content: 'Stream stopped successfully.',
-                    ephemeral: false
-                });
-            } else if (i.customId.startsWith('play_channel_')) {
-                const playChannelName = i.customId.replace('play_channel_', '');
-                const playResult = await executeStreamChannel(playChannelName, voiceChannel.id);
-
-                if (playResult.success) {
-                    await i.followUp({
-                        content: playResult.message,
-                        embeds: playResult.embed ? [playResult.embed] : [],
-                        components: playResult.components || []
-                    });
-                } else {
-                    await i.followUp({
-                        content: playResult.message,
-                        ephemeral: true
-                    });
-                }
-            }
-        } catch (error) {
-            logger.error(`Error handling button interaction: ${error}`);
-            try {
-                await i.followUp({
-                    content: 'An error occurred while processing your request.',
-                    ephemeral: true
-                });
-            } catch (followUpError) {
-                logger.error(`Error sending follow-up message: ${followUpError}`);
-            }
+    try {
+        const channelName = interaction.options.get('channel')?.value as string;
+        if (!channelName) {
+            await interaction.reply('Please specify a channel name.');
+            return;
         }
-    });
+
+        logger.info(`Command /stream received with channel: ${channelName}.`);
+        await interaction.deferReply();
+
+        const member = interaction.member as GuildMember;
+        const voiceChannel = member.voice.channel;
+        if (!voiceChannel) {
+            await interaction.editReply('You need to be in a voice channel to use this command.');
+            return;
+        }
+
+        const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+        if (!result.success) {
+            await interaction.editReply(result.message);
+            return;
+        }
+
+        const reply = await interaction.editReply({
+            content: result.message,
+            embeds: result.embed ? [result.embed] : [],
+            components: result.components || []
+        });
+
+        // Create a collector for button interactions
+        const collector = reply.createMessageComponentCollector({
+            componentType: ComponentType.Button,
+            time: 24 * 60 * 60 * 1000 // 24 hours
+        });
+
+        collector.on('collect', async (i) => {
+            logger.debug(`Button clicked: ${i.customId}`);
+            try {
+                await i.deferUpdate();
+                if (i.customId === PROGRAMME_BUTTON_ID) {
+                    logger.info(`Programme button clicked for channel: ${channelName}`);
+                    const programmeInfo = await generateProgrammeInfo(channelName);
+
+                    if (!programmeInfo.success) {
+                        await i.followUp({
+                            content: programmeInfo.message,
+                            ephemeral: true
+                        });
+                        return;
+                    }
+
+                    await i.followUp({
+                        content: `📺 Programme Guide for ${channelName}`,
+                        embeds: programmeInfo.embeds,
+                        ephemeral: true // Only visible to the user who clicked
+                    });
+                } else if (i.customId === STOP_BUTTON_ID) {
+                    logger.info(`Stop button clicked for stream: ${channelName}`);
+                    const stopResult = await executeStopStream();
+
+                    if (!stopResult.success) {
+                        await i.followUp({
+                            content: stopResult.message,
+                            embeds: [],
+                            ephemeral: true
+                        });
+                        return;
+                    }
+
+                    await i.followUp({
+                        content: 'Stream stopped successfully.',
+                        ephemeral: false
+                    });
+                } else if (i.customId.startsWith('play_channel_')) {
+                    const playChannelName = i.customId.replace('play_channel_', '');
+                    const playResult = await executeStreamChannel(playChannelName, voiceChannel.id);
+
+                    if (playResult.success) {
+                        await i.followUp({
+                            content: playResult.message,
+                            embeds: playResult.embed ? [playResult.embed] : [],
+                            components: playResult.components || []
+                        });
+                    } else {
+                        await i.followUp({
+                            content: playResult.message,
+                            ephemeral: true
+                        });
+                    }
+                }
+            } catch (error) {
+                logger.error(`Error handling button interaction: ${error}`);
+                try {
+                    await i.followUp({
+                        content: 'An error occurred while processing your request.',
+                        ephemeral: true
+                    });
+                } catch (followUpError) {
+                    logger.error(`Error sending follow-up message: ${followUpError}`);
+                }
+            }
+        });
+    } catch (error) {
+        logger.error(`Error handling stream command: ${error}`);
+        try {
+            await interaction.reply({
+                content: 'An error occurred while processing your request.',
+                ephemeral: true
+            });
+        } catch (replyError) {
+            logger.error(`Error sending reply: ${replyError}`);
+        }
+    }
 }

@@ -161,6 +161,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
                 const refreshedResult = await generateChannelList(pageOption);
 
                 if (!interaction.command?.createdAt || interaction.command.createdAt.getTime() < Date.now() - 60 * 60 * 1000) {
+                    logger.debug('List command interaction has expired, skipping refresh');
                     return;
                 }
 
@@ -169,6 +170,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
                     embeds: refreshedResult.embed ? [refreshedResult.embed] : [],
                     components: refreshedResult.components || []
                 });
+                logger.debug('List buttons refreshed');
             } catch (error) {
                 logger.error(`Error refreshing buttons: ${error}`);
             }

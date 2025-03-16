@@ -155,6 +155,20 @@ export async function handleListCommand(interaction: CommandInteraction) {
             flags: MessageFlags.Ephemeral
         });
 
+        // Refresh buttons before they expire
+        setTimeout(async () => {
+            try {
+                const refreshedResult = await generateChannelList(pageOption);
+                await interaction.editReply({
+                    content: refreshedResult.message,
+                    embeds: refreshedResult.embed ? [refreshedResult.embed] : [],
+                    components: refreshedResult.components || []
+                });
+            } catch (error) {
+                logger.error(`Error refreshing buttons: ${error}`);
+            }
+        }, 14 * 60 * 1000); // 14 minutes
+
         // Create a collector for button interactions
         const collector = reply.createMessageComponentCollector({
             componentType: ComponentType.Button,

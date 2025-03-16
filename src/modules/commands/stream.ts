@@ -199,10 +199,24 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             components: result.components || []
         });
 
+        // Refresh buttons before they expire
+        setTimeout(async () => {
+            try {
+                const refreshedResult = await executeStreamChannel(channelName, voiceChannel.id);
+                await interaction.editReply({
+                    content: refreshedResult.message,
+                    embeds: refreshedResult.embed ? [refreshedResult.embed] : [],
+                    components: refreshedResult.components || []
+                });
+            } catch (error) {
+                logger.error(`Error refreshing buttons: ${error}`);
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+
         // Create a collector for button interactions
         const collector = reply.createMessageComponentCollector({
             componentType: ComponentType.Button,
-            time: 24 * 60 * 60 * 1000 // 24 hours
+            time: 15 * 60 * 1000 // 15 minutes
         });
 
         collector.on('collect', async (i) => {

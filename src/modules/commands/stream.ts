@@ -53,8 +53,6 @@ export async function executeStreamChannel(
 
         try {
             await initializeStreamer();
-            logger.info('Stopping any existing stream...');
-            await stopStreaming();
             await new Promise(resolve => setTimeout(resolve, 750));
 
             const connection = getVoiceConnection(config.GUILD);

@@ -121,7 +121,7 @@ The reason we have a `bot` and a `user` token is because the current Discord API
 
 ## Commands
 
-The bot can be controlled using the following commands in the text channel:
+The bot can be controlled using the following commands:
 
 | Command | Description |
 |---------|-------------|

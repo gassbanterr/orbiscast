@@ -3,10 +3,9 @@ import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
 import { getVoiceConnection } from '@discordjs/voice';
-import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
+import { getCurrentChannelEntry, initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import { generateProgrammeInfo } from './programme';
 import { executeStopStream } from './stop';
-import { getCurrentChannelEntry } from '../streaming';
 
 const logger = getLogger();
 const PROGRAMME_BUTTON_ID = 'show_programme';
@@ -252,7 +251,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                     if (!stopResult.success) {
                         await i.followUp({
                             content: stopResult.message,
-                            embeds: [],
                             ephemeral: true
                         });
                         return;

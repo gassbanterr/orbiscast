@@ -1,6 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CommandInteraction, EmbedBuilder, GuildMember, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { getChannelEntries } from '../../modules/database';
+import { executeStreamChannel } from './stream';
 
 const logger = getLogger();
 
@@ -149,5 +150,44 @@ export async function handleListCommand(interaction: CommandInteraction) {
             content: result.message,
             flags: MessageFlags.Ephemeral
         });
+    }
+}
+
+/**
+ * Handles the play channel button interaction
+ * @param interaction - The Discord button interaction
+ */
+export async function handlePlayChannelButton(interaction: ButtonInteraction) {
+    await interaction.deferUpdate();
+
+    const customId = interaction.customId;
+    const channelName = customId.replace('play_channel_', '');
+
+    if (interaction.member && 'voice' in interaction.member) {
+        const member = interaction.member as GuildMember;
+        const voiceChannel = member.voice.channel;
+
+        if (!voiceChannel) {
+            await interaction.followUp({
+                content: 'You need to be in a voice channel to play this channel.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+        if (result.success) {
+            await interaction.followUp({
+                content: result.message,
+                embeds: result.embed ? [result.embed] : [],
+                components: result.components || []
+            });
+        } else {
+            await interaction.followUp({
+                content: result.message,
+                ephemeral: true
+            });
+        }
     }
 }

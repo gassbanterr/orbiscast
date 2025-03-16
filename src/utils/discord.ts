@@ -70,58 +70,6 @@ client.on('interactionCreate', async interaction => {
         } else if (commandName === 'programme') {
             await handleProgrammeCommand(interaction);
         }
-    } else if (interaction.isButton()) {
-        // Handle button interactions globally
-        const { customId } = interaction;
-
-        if (customId === 'show_programme') {
-            // This is handled in the collector in the stream command
-        } else if (customId === 'stop_stream') {
-            if (!interaction.isButton()) return;
-            await interaction.deferUpdate();
-
-            const { executeStopStream } = require('../modules/commands/stop');
-            const result = await executeStopStream();
-
-            await interaction.followUp({
-                content: result.message,
-                ephemeral: false
-            });
-        } else if (customId.startsWith('play_channel_')) {
-            if (!interaction.isButton()) return;
-            await interaction.deferUpdate();
-
-            const channelName = customId.replace('play_channel_', '');
-            const { executeStreamChannel } = require('../modules/commands/stream');
-
-            if (interaction.member && 'voice' in interaction.member) {
-                const member = interaction.member as GuildMember;
-                const voiceChannel = member.voice.channel;
-
-                if (!voiceChannel) {
-                    await interaction.followUp({
-                        content: 'You need to be in a voice channel to play this channel.',
-                        ephemeral: true
-                    });
-                    return;
-                }
-
-                const result = await executeStreamChannel(channelName, voiceChannel.id);
-
-                if (result.success) {
-                    await interaction.followUp({
-                        content: result.message,
-                        embeds: result.embed ? [result.embed] : [],
-                        components: result.components || []
-                    });
-                } else {
-                    await interaction.followUp({
-                        content: result.message,
-                        ephemeral: true
-                    });
-                }
-            }
-        }
     } else if (interaction.isAutocomplete()) {
         const { commandName, options } = interaction;
 

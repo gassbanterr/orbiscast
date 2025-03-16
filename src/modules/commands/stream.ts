@@ -97,6 +97,10 @@ export async function executeStreamChannel(channelName: string, voiceChannelId: 
                     { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
                     { name: 'Description', value: description }
                 );
+            } else {
+                streamEmbed.addFields(
+                    { name: '🔴 NOW PLAYING', value: 'No current programme information available', inline: false }
+                );
             }
 
             if (nextProgramme) {
@@ -116,6 +120,10 @@ export async function executeStreamChannel(channelName: string, voiceChannelId: 
                     value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
                     inline: false
                 });
+            } else {
+                streamEmbed.addFields(
+                    { name: '⏭️ UP NEXT', value: 'No upcoming programme information available', inline: false }
+                );
             }
 
             streamEmbed.setFooter({ text: 'Stream and programme information is subject to change' });

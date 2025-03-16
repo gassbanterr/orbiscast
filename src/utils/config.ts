@@ -24,12 +24,12 @@ class Config {
         this.XMLTV = env.XMLTV?.trim() || '';
         this.REFRESH_IPTV = parseInt(env.REFRESH_IPTV?.trim() || '1440');
         this.DEFAULT_STREAM_TIMEOUT = parseInt(env.DEFAULT_STREAM_TIMEOUT?.trim() || '10');
-        this.RAM_CACHE = env.RAM_CACHE?.trim().toLowerCase() !== 'false';
+        this.RAM_CACHE = env.RAM_CACHE?.trim().toLowerCase() !== 'false' || false;
         this.DISCORD_BOT_TOKEN = env.DISCORD_BOT_TOKEN?.trim() || '';
         this.DISCORD_USER_TOKEN = env.DISCORD_USER_TOKEN?.trim() || '';
         this.GUILD = env.GUILD?.trim() || '0';
         this.DEBUG = env.DEBUG?.trim().toLowerCase() === 'true';
-        this.CACHE_DIR = env.CACHE_DIR?.trim() || (this.RAM_CACHE ? '/dev/shm/orbiscast' : '../cache');
+        this.CACHE_DIR = (this.RAM_CACHE ? '/dev/shm/orbiscast' : env.CACHE_DIR?.trim()) || '../cache';
 
         logger.info(`Loaded GUILD ID: ${this.GUILD}`);
 

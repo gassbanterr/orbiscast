@@ -251,6 +251,7 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
                     if (!stopResult.success) {
                         await i.followUp({
                             content: stopResult.message,
+                            embeds: [],
                             ephemeral: true
                         });
                         return;

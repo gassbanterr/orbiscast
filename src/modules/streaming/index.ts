@@ -6,7 +6,7 @@ import { config } from '../../utils/config';
 import type { ChannelEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
-const streamer = new Streamer(new Client());
+let streamer = new Streamer(new Client());
 let abortController = new AbortController();
 let currentChannelEntry: ChannelEntry | null = null;
 let streamSpectatorMonitor: ReturnType<typeof setInterval> | null = null;
@@ -273,3 +273,36 @@ export async function stopStreaming() {
         logger.error(`Error stopping stream: ${error}`);
     }
 }
+
+/**
+ * Resets the streamer client and all associated resources
+ * Useful for cleaning up after a crash or error
+ * @returns Promise that resolves when cleanup is complete
+ */
+export async function resetStreamer() {
+    try {
+        if (streamer.voiceConnection) {
+            try {
+                streamer.leaveVoice();  // this also stops the stream
+            } catch (err) {
+                logger.debug(`Error while leaving voice: ${err}`);
+            }
+        }
+
+        if (streamer.client.isReady()) {
+            try {
+                streamer.client.destroy();
+            } catch (err) {
+                logger.debug(`Error while destroying client: ${err}`);
+            }
+        }
+        logger.debug('Creating new streamer instance');
+        streamer = new Streamer(new Client());
+
+        await initializeStreamer();
+        logger.info('Streamer client has been reset successfully');
+    } catch (error) {
+        logger.error(`Error resetting streamer: ${error}`);
+    }
+}
+

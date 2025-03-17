@@ -15,8 +15,8 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
     protected validateData(data: unknown): data is ChannelEntry {
         const channel = data as ChannelEntry;
         return typeof channel === 'object' && channel !== null &&
-            (typeof channel.tvg_id === 'string' || typeof channel.tvg_id === 'string') &&
-            (typeof channel.tvg_name === 'string' || typeof channel.tvg_id === 'string');
+            typeof channel.tvg_id === 'string' &&
+            typeof channel.tvg_name === 'string';
     }
 
     /**

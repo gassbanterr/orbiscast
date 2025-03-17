@@ -1,6 +1,15 @@
 # Use the official Alpine base image
 FROM alpine:latest
 
+# Add labels
+LABEL maintainer="Zbejas <info@zbejas.io>"
+LABEL description="A Discord IPTV streaming bot."
+LABEL org.opencontainers.image.source="https://github.com/zbejas/orbiscast"
+LABEL org.opencontainers.image.documentation="https://github.com/zbejas/orbiscast/blob/main/README.md"
+LABEL org.opencontainers.image.authors="Zbejas"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
+LABEL org.opencontainers.image.title="Orbiscast"
+
 # Install dependencies
 RUN apk update && \
     apk add --no-cache curl git unzip ffmpeg bash

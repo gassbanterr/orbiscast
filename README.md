@@ -10,6 +10,7 @@
 [![Repo size](https://img.shields.io/github/repo-size/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast?sort=date)](https://hub.docker.com/r/zbejas/orbiscast)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
+[![CodeFactor](https://www.codefactor.io/repository/github/zbejas/orbiscast/badge)](https://www.codefactor.io/repository/github/zbejas/orbiscast)
 
 **OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with [commands](#commands) specified at the end of this document.
 

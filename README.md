@@ -30,17 +30,16 @@ This project is still in development, so expect bugs and missing features. If yo
 You will need to set a few things up before you can run the bot:
 
 - **Note**: Do not share any of the tokens [mentioned below](#discord-configuration) with anyone. If you do, regenerate them immediately.
-- Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token.
-  - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token.
-- Get the user token from the Discord web client.
-  - The user token is required to join the voice channel and stream video. It is recommended to use a secondary account for this purpose.
-  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd).
-  - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
-- Get the bot and the user on your desired server.
-  - The user has to manually join the server.
-  - The bot can be added following the portal instructions linked above. Make sure to include the following scopes when generating the bot invite link:
+- Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token, and invite the bot to your server.
+  - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token and invite link. Make sure to give the bot the necessary permissions:
     - `bot`
     - `applications.commands`
+    - In the [Developer Portal](https://discord.com/developers/applications), go to your bot's settings and enable the `Message Content Intent`.
+- Get the user token from the Discord web client.
+  - The user token is required to join the voice channel and stream video. It is recommended to use a secondary account for this purpose.
+    - The user has to manually join the server.
+  - You can get the token by checking this [gist](https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6#file-get-discord-token-from-browser-md) I found, or by using a tool like [Discord Get User Token](https://chromewebstore.google.com/detail/discord-get-user-token/accgjfooejbpdchkfpngkjjdekkcbnfd).
+  - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
 > [!Warning]

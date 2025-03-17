@@ -37,9 +37,28 @@ export async function fillDbChannels(force = true): Promise<void> {
     await clearChannels();
     logger.info('Fetching playlist...');
 
-    let playlistContent = await getCachedFile('playlist.m3u');
+    let playlistContent = null;
+    try {
+        playlistContent = await getCachedFile('playlist.m3u');
+        if (playlistContent) {
+            logger.debug(`Retrieved cached playlist, size: ${playlistContent.length} bytes`);
+        }
+    } catch (error) {
+        logger.warn(`Error retrieving cached playlist: ${error}`);
+    }
+
     if (!playlistContent || force) {
-        playlistContent = await fetchWithRetry(config.PLAYLIST, 'playlist.m3u');
+        logger.info(`${force ? 'Force flag set, downloading' : 'No cached content available'}, fetching from source...`);
+        try {
+            playlistContent = await fetchWithRetry(config.PLAYLIST, 'playlist.m3u');
+            if (playlistContent) {
+                logger.debug(`Successfully downloaded playlist, size: ${playlistContent.length} bytes`);
+            } else {
+                logger.error('Failed to download playlist: empty response');
+            }
+        } catch (error) {
+            logger.error(`Error downloading playlist: ${error}`);
+        }
     }
 
     if (playlistContent) {
@@ -58,7 +77,7 @@ export async function fillDbChannels(force = true): Promise<void> {
         }
         await addChannels(channels);
     } else {
-        logger.error('Failed to fetch playlist content');
+        logger.error('Failed to fetch playlist content from both cache and source');
     }
 }
 
@@ -103,18 +122,128 @@ export async function fillDbProgrammes(force = false): Promise<void> {
 
 /**
  * Parses a playlist line to extract channel information.
+ * Tries multiple formats to ensure compatibility with different playlist providers.
  * 
  * @param {string} line - A line from the M3U playlist starting with #EXTINF
- * @returns {ChannelEntry | null} - Channel object or null if parsing fails
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
  */
 function fromPlaylistLine(line: string): ChannelEntry | null {
-    const PATTERN = /#EXTINF:.*\s*channelID="(?<xui_id>.*?)"\s*tvg-chno="(?<tvg_chno>.*?)"\s*tvg-name="(?<tvg_name>.*?)"\s*tvg-id="(?<tvg_id>.*?)"\s*tvg-logo="(?<tvg_logo>.*?)"\s*group-title="(?<group_title>.*?)"/;
-    const matches = line.match(PATTERN);
+    // Try each parsing strategy in sequence
+    return parseOriginalFormat(line) ||
+        parseAlternativeFormat(line) ||
+        parseFlexibleFormat(line);
+}
+
+/**
+ * Attempts to parse a playlist line using the original format pattern.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseOriginalFormat(line: string): ChannelEntry | null {
+    const ORIGINAL_PATTERN = /#EXTINF:.*\s*channelID="(?<xui_id>.*?)"\s*tvg-chno="(?<tvg_chno>.*?)"\s*tvg-name="(?<tvg_name>.*?)"\s*tvg-id="(?<tvg_id>.*?)"\s*tvg-logo="(?<tvg_logo>.*?)"\s*group-title="(?<group_title>.*?)"/;
+    const matches = line.match(ORIGINAL_PATTERN);
+
     if (matches?.groups) {
         const { xui_id, tvg_id, tvg_name, tvg_logo, group_title } = matches.groups;
         const [prefix] = (group_title || '').split(': |');
-        return { xui_id: parseInt(xui_id || '0'), tvg_id, tvg_name, tvg_logo, group_title, url: '', created_at: undefined, country: prefix };
+        return {
+            xui_id: parseInt(xui_id || '0'),
+            tvg_id,
+            tvg_name,
+            tvg_logo,
+            group_title,
+            url: '',
+            created_at: undefined,
+            country: prefix
+        };
     }
+
+    return null;
+}
+
+/**
+ * Attempts to parse a playlist line using the alternative format pattern.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseAlternativeFormat(line: string): ChannelEntry | null {
+    const ALT_PATTERN = /#EXTINF:(?<duration>.*?)\s+tvg-id="(?<tvg_id>.*?)"\s+tvg-logo="(?<tvg_logo>.*?)"\s+group-title="(?<group_title>.*?)"(?:,\s*(?<channel_name>.*?)(?:\s+\(.*?\))?)?$/;
+    const matches = line.match(ALT_PATTERN);
+
+    if (matches?.groups) {
+        const { tvg_id, tvg_logo, group_title, channel_name } = matches.groups;
+        // Use the channel name as tvg_name if available
+        const tvg_name = channel_name || tvg_id;
+        const [prefix] = (group_title || '').split(': |');
+
+        logger.debug(`Parsed alternative format channel: ${tvg_name}`);
+
+        return {
+            xui_id: 0, // No xui_id in this format
+            tvg_id,
+            tvg_name,
+            tvg_logo,
+            group_title,
+            url: '',
+            created_at: undefined,
+            country: prefix
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Attempts to parse a playlist line using a flexible approach when standard patterns fail.
+ * Extracts whatever information is available in the line.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseFlexibleFormat(line: string): ChannelEntry | null {
+    if (!line.startsWith('#EXTINF:')) {
+        return null;
+    }
+
+    logger.debug(`Trying flexible parsing for line: ${line.substring(0, 100)}...`);
+
+    // Extract available attributes
+    const tvgIdMatch = line.match(/tvg-id="([^"]+)"/);
+    const tvgLogoMatch = line.match(/tvg-logo="([^"]+)"/);
+    const groupTitleMatch = line.match(/group-title="([^"]+)"/);
+
+    // Extract channel name from after the last comma
+    const lastCommaIndex = line.lastIndexOf(',');
+    let channelName = '';
+
+    if (lastCommaIndex !== -1) {
+        channelName = line.substring(lastCommaIndex + 1).trim();
+        // Remove quality indicator if present (anything in parentheses at the end)
+        channelName = channelName.replace(/\s+\([^)]+\)\s*$/, '');
+    }
+
+    const tvgId = tvgIdMatch ? tvgIdMatch[1] : '';
+    const tvgName = channelName || tvgId;
+    const tvgLogo = tvgLogoMatch ? tvgLogoMatch[1] : '';
+    const groupTitle = groupTitleMatch ? groupTitleMatch[1] : '';
+    const country = groupTitle ? groupTitle.split(': |')[0] : '';
+
+    if (tvgName) {
+        logger.debug(`Flexible parsing found channel: ${tvgName}`);
+        return {
+            xui_id: 0,
+            tvg_id: tvgId,
+            tvg_name: tvgName,
+            tvg_logo: tvgLogo,
+            group_title: groupTitle,
+            url: '',
+            created_at: undefined,
+            country
+        };
+    }
+
     return null;
 }
 
@@ -291,14 +420,29 @@ function parseDate(dateString: string): Date {
 async function fetchWithRetry(url: string, cacheFileName: string): Promise<Buffer | null> {
     const maxRetries = 3;
     let retryDelay = 5;
+
+    logger.info(`Downloading from ${url} to cache as ${cacheFileName}`);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             logger.info(`Download attempt ${attempt}/${maxRetries}...`);
-            const response = await axios.get(url, { timeout: 30000 });
-            const content = response.data;
-            if (content) {
-                await cacheFile(cacheFileName, Buffer.from(content));
-                return Buffer.from(content);
+            const response = await axios.get(url, {
+                timeout: 30000,
+                responseType: 'arraybuffer'  // Ensure binary data is handled correctly
+            });
+
+            if (response.data) {
+                const content = Buffer.from(response.data);
+                logger.info(`Downloaded ${content.length} bytes, caching as ${cacheFileName}`);
+                try {
+                    await cacheFile(cacheFileName, content);
+                    logger.debug(`Successfully cached file ${cacheFileName}`);
+                } catch (cacheError) {
+                    logger.error(`Error caching file: ${cacheError}`);
+                }
+                return content;
+            } else {
+                logger.warn('Downloaded content was empty');
             }
         } catch (error) {
             if (axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || (error.response?.status ?? 0) >= 500)) {

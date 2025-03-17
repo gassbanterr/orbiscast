@@ -154,7 +154,8 @@ async function handlePlayChannelButton(interaction: ButtonInteraction, channelNa
         await interaction.followUp({
             content: result.message,
             embeds: result.embed ? [result.embed] : [],
-            components: result.components || []
+            components: result.components || [],
+            flags: MessageFlags.Ephemeral
         });
     } else {
         await interaction.followUp({

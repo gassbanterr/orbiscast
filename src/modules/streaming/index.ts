@@ -217,7 +217,16 @@ export async function startStreaming(channelEntry: ChannelEntry) {
         command.on("error", async (err: any, _stdout: any, _stderr: any) => {
             if (!err.toString().includes('ffmpeg exited with code 255')) {
                 logger.error(`FFmpeg ${err}`);
+                await stopStreaming();
             }
+        });
+
+        command.on("end", async (stdout: string | null, stderr: string | null) => {
+            logger.debug(`FFmpeg process ended`);
+            if (stderr) {
+                logger.error(`FFmpeg stderr: ${stderr}`);
+            }
+            await stopStreaming();
         });
 
         logger.info(`Streaming channel: ${channelEntry.tvg_name}.`);

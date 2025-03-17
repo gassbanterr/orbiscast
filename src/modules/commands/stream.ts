@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ButtonInteraction, ComponentType, EmbedBuilder, GuildMember, Message, InteractionResponse } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ButtonInteraction, ComponentType, EmbedBuilder, GuildMember, Message, InteractionResponse, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
@@ -147,7 +147,7 @@ export async function executeStreamChannel(
                 streamEmbed.addFields({
                     name: upcomingFieldName,
                     value: upcomingListItems.join('\n'),
-                    inline: false
+                    inline: false,
                 });
             } else {
                 streamEmbed.addFields(
@@ -212,7 +212,8 @@ export async function executeStreamChannel(
                                 await i.followUp({
                                     content: playResult.message,
                                     embeds: playResult.embed ? [playResult.embed] : [],
-                                    components: playResult.components || []
+                                    components: playResult.components || [],
+                                    flags: MessageFlags.Ephemeral
                                 });
 
                                 // Setup collector for the new message if available
@@ -273,10 +274,14 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
     try {
         const channelName = interaction.options.get('channel')?.value as string;
         if (!channelName) {
-            await interaction.reply('Please specify a channel name.');
+            await interaction.reply({
+                content: 'Please specify a channel name.',
+                ephemeral: true
+            });
             return;
         }
-        await interaction.deferReply();
+
+        await interaction.deferReply({ ephemeral: true });
 
         const member = interaction.member as GuildMember;
         const voiceChannel = member.voice.channel;
@@ -298,7 +303,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             components: result.components || []
         });
 
-        // Create a collector for button interactions
         if (result.setupCollector) {
             result.setupCollector(reply);
         }

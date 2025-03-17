@@ -120,7 +120,7 @@ export async function generateChannelList(pageOption: string | number | undefine
 
     return {
         success: true,
-        message: `Channel List (Page ${page}/${totalPages})`,
+        message: ``, // Empty message since we're using embed
         isAllChannels: false,
         page,
         totalPages,
@@ -148,10 +148,9 @@ export async function handleListCommand(interaction: CommandInteraction) {
             return;
         }
 
-        // Only include embeds when 'all' option is used
         const reply = await interaction.reply({
             content: result.message,
-            embeds: result.isAllChannels && result.embed ? [result.embed] : [],
+            embeds: result.embed ? [result.embed] : [],
             components: result.components || [],
             flags: MessageFlags.Ephemeral
         });
@@ -174,7 +173,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
         }, 30 * 60 * 1000); // 30 minutes 
 
         collector.on('collect', async (i) => {
-            logger.debug(`Button clicked: ${i.customId}`);
+            logger.debug(`Button clicked: ${i.customId} by ${i.user.tag}`);
             try {
                 await i.deferUpdate();
                 if (i.customId.startsWith('play_channel_')) {
@@ -197,7 +196,8 @@ export async function handleListCommand(interaction: CommandInteraction) {
                         await i.followUp({
                             content: result.message,
                             embeds: result.embed ? [result.embed] : [],
-                            components: result.components || []
+                            components: result.components || [],
+                            flags: MessageFlags.Ephemeral
                         });
                     } else {
                         await i.followUp({
@@ -210,7 +210,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
 
                     await i.followUp({
                         content: result.message,
-                        ephemeral: false
+                        ephemeral: true
                     });
                 }
                 // ... handle other button types

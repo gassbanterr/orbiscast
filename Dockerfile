@@ -1,5 +1,5 @@
 # Use the official Alpine base image
-FROM alpine:latest
+FROM alpine:3.21
 
 # Add labels
 LABEL maintainer="Zbejas <info@zbejas.io>"

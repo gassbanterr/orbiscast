@@ -35,7 +35,7 @@ client.once('ready', async () => {
         new SlashCommandBuilder().setName('stream').setDescription('Stream an IPTV channel')
             .addStringOption(option => option.setName('channel').setDescription('The IPTV channel to stream').setAutocomplete(true)),
         new SlashCommandBuilder().setName('stop').setDescription('Stop streaming the IPTV channel'),
-        new SlashCommandBuilder().setName('list').setDescription('List all IPTV channels')
+        new SlashCommandBuilder().setName('channels').setDescription('List all IPTV channels')
             .addStringOption(option => option.setName('page').setDescription('Page number to display or "all" to list all channels')),
         new SlashCommandBuilder().setName('refresh').setDescription('Refresh the specified data')
             .addStringOption(option => option.setName('type').setDescription('The type of data to refresh').setRequired(true)
@@ -45,7 +45,7 @@ client.once('ready', async () => {
                     { name: 'programme', value: 'programme' }
                 )),
         new SlashCommandBuilder().setName('programme').setDescription('Show programme guide for a channel')
-            .addStringOption(option => option.setName('channel').setDescription('The channel name').setAutocomplete(true).setRequired(true)),
+            .addStringOption(option => option.setName('channel').setDescription('The channel name').setAutocomplete(true).setRequired(false)),
         new SlashCommandBuilder().setName('reset').setDescription('Reset the streaming client to fix connection issues'),
     ].map(command => command.toJSON());
 
@@ -69,7 +69,7 @@ client.on('interactionCreate', async interaction => {
             await handleStreamCommand(interaction);
         } else if (commandName === 'stop') {
             await handleStopCommand(interaction);
-        } else if (commandName === 'list') {
+        } else if (commandName === 'channels') {
             await handleListCommand(interaction);
         } else if (commandName === 'refresh') {
             await handleRefreshCommand(interaction);

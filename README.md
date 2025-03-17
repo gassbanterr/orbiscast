@@ -136,6 +136,6 @@ _The available channels will be shown when tab-completing the channel name, but 
 
 ## Known Issues
 
-If your issue is not listed here, please report it in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
+If your issue is not listed here and you think it should be, please check the [Issues](https://github.com/zbejas/orbiscast/issues) section. If it is not there, please open a new issue.
 
 - The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.

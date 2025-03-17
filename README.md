@@ -125,7 +125,7 @@ The bot can be controlled using the following commands:
 
 | Command | Description |
 |---------|-------------|
-| `/stream <channe>` | Start streaming the specified channel. If no channel is specified channels will be listed. |
+| `/stream <channe>` | Start streaming the specified channel. |
 | `/programme <channel>` | Show the current programme for the specified channel. If no channel is all channels will be listed. |
 | `/channels <page>` | List all available channels. Page is optional, paging is done in groups of 25. |
 | `/stop` | Stop the current stream. |

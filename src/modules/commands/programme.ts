@@ -3,6 +3,7 @@ import { getLogger } from '../../utils/logger';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
 import type { ChannelEntry, ProgrammeEntry } from '../../interfaces/iptv';
 import { getCurrentChannelEntry } from '../streaming';
+import { ProgrammeEmbedProcessor } from '../embeds/programme';
 
 const logger = getLogger();
 
@@ -45,100 +46,14 @@ export async function generateProgrammeInfo(channelName: string) {
             return { success: false, message: `No upcoming programmes found for channel: ${channelName}`, embeds: [] };
         }
 
-        const programmesByDate = futureProgrammes.reduce((acc, programme) => {
-            const startDate = programme.start
-                ? new Date(programme.start)
-                : new Date(programme.start_timestamp ? programme.start_timestamp * 1000 : Date.now());
+        // Use the moved embed generation function
+        const embedsToSend = ProgrammeEmbedProcessor.generateProgrammeInfoEmbeds(channelName, channelProgrammes);
 
-            const dateKey = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-
-            if (!acc[dateKey]) {
-                acc[dateKey] = [];
-            }
-            acc[dateKey].push(programme);
-            return acc;
-        }, {} as Record<string, typeof futureProgrammes>);
-
-        const mainEmbed = new EmbedBuilder()
-            .setTitle(`📺 Programme Guide: ${channelName}`)
-            .setColor('#0099ff')
-            .setTimestamp()
-            .setFooter({ text: 'Programme information is subject to change' });
-
-        const currentShow = getCurrentShow(futureProgrammes, now);
-
-        if (currentShow) {
-            const isLive = (currentShow.start_timestamp ?? 0) <= now && (currentShow.stop_timestamp ?? Infinity) >= now;
-            const startDate = currentShow.start
-                ? new Date(currentShow.start)
-                : new Date(currentShow.start_timestamp ? currentShow.start_timestamp * 1000 : Date.now());
-            const stopDate = currentShow.stop
-                ? new Date(currentShow.stop)
-                : new Date(currentShow.stop_timestamp ? currentShow.stop_timestamp * 1000 : Date.now());
-
-            const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-            const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-            const date = startDate.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
-
-            const description = typeof currentShow.description === 'string' ? currentShow.description : '';
-
-            mainEmbed
-                .setDescription(`${isLive ? '🔴 **NOW LIVE**' : '**Next Up**'}: ${currentShow.title}`)
-                .addFields(
-                    { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
-                    { name: 'Date', value: date, inline: true },
-                    { name: 'Description', value: description ? description.substring(0, 200) + (description.length > 200 ? '...' : '') : 'No description available' }
-                );
-
-            if (isLive) {
-                mainEmbed.setColor('#FF0000'); // Red for live shows
-            }
+        if (embedsToSend.length === 0) {
+            return { success: false, message: `No programme information available for channel: ${channelName}`, embeds: [] };
         }
 
-        const embedsToSend = [mainEmbed];
-
-        Object.entries(programmesByDate).forEach(([date, programmes]) => {
-            // Skip if this is just the current show
-            if (programmes.length === 1 && programmes[0] === currentShow) {
-                return;
-            }
-
-            const dateEmbed = new EmbedBuilder()
-                .setTitle(`📅 ${date}`)
-                .setColor('#00AAFF');
-
-            programmes.forEach(programme => {
-                if (programme === currentShow) return; // Skip current show as it's in the main embed
-
-                const startDate = programme.start
-                    ? new Date(programme.start)
-                    : new Date(programme.start_timestamp ? programme.start_timestamp * 1000 : Date.now());
-                const stopDate = programme.stop
-                    ? new Date(programme.stop)
-                    : new Date(programme.stop_timestamp ? programme.stop_timestamp * 1000 : Date.now());
-
-                const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const description = typeof programme.description === 'string'
-                    ? (programme.description.length > 100
-                        ? `${programme.description.substring(0, 100)}...`
-                        : programme.description)
-                    : 'No description available';
-
-                dateEmbed.addFields({
-                    name: `${startTime} - ${stopTime}: ${programme.title}`,
-                    value: description
-                });
-            });
-
-            if (dateEmbed.data.fields?.length) {
-                embedsToSend.push(dateEmbed);
-            }
-        });
-
-        // Discord has a limit of up to 10 embeds per message
-        const embedsToSendLimited = embedsToSend.slice(0, 10);
-        return { success: true, message: '', embeds: embedsToSendLimited };
+        return { success: true, message: '', embeds: embedsToSend };
 
     } catch (error) {
         logger.error(`Error generating programme info: ${error}`);
@@ -180,21 +95,13 @@ export async function generateProgrammeList(pageOption: number = 1): Promise<{
 
     const liveChannel: ChannelEntry | null = getCurrentChannelEntry();
 
-    const embed = new EmbedBuilder()
-        .setTitle(`📺 Channel Programme Guide (Page ${pageOption}/${totalPages})`)
-        .setDescription('Click a channel to view its programme guide')
-        .setColor('#0099ff')
-        .setTimestamp();
-
-    for (let i = 0; i < channelsToDisplay.length; i += 10) {
-        const chunk = channelsToDisplay.slice(i, i + 10);
-        const fieldValue = chunk.map(channel => {
-            const channelName = channel.tvg_name || 'Unknown';
-            const isLive = liveChannel?.tvg_name === channel.tvg_name;
-            return `- ${channelName} ${isLive ? '🔴 LIVE' : ''}`;
-        }).join('\n');
-        embed.addFields({ name: `Channels ${start + i + 1}-${start + i + chunk.length}`, value: fieldValue });
-    }
+    // Use the moved embed generation function
+    const embed = ProgrammeEmbedProcessor.generateChannelListEmbed(
+        channelsToDisplay,
+        liveChannel,
+        pageOption,
+        totalPages
+    );
 
     const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
@@ -225,9 +132,16 @@ export async function generateProgrammeList(pageOption: number = 1): Promise<{
         for (const channel of chunk) {
             if (channel.tvg_name) {
                 const isLive = liveChannel?.tvg_name === channel.tvg_name;
+
+                // Sanitize the channel name for use in custom ID
+                // Discord has a 100 character limit on custom IDs
+                const safeChannelName = channel.tvg_name.replace(/[^\w-]/g, '_').slice(0, 80);
+
+                logger.debug(`Creating button with ID: view_programme_${safeChannelName} for channel: ${channel.tvg_name}`);
+
                 buttonRow.addComponents(
                     new ButtonBuilder()
-                        .setCustomId(`view_programme_${channel.tvg_name}`)
+                        .setCustomId(`view_programme_${safeChannelName}`)
                         .setLabel(`${isLive ? '🔴 ' : '📋 '}${channel.tvg_name}`)
                         .setStyle(isLive ? ButtonStyle.Danger : ButtonStyle.Primary)
                 );
@@ -256,13 +170,44 @@ export async function generateProgrammeList(pageOption: number = 1): Promise<{
  */
 export async function handleProgrammeListButtonInteraction(interaction: ButtonInteraction) {
     try {
-        await interaction.deferUpdate();
+        logger.debug(`Received button interaction: ${interaction.customId}`);
+
+        await interaction.deferUpdate().catch(err => {
+            logger.error(`Failed to defer update: ${err}`);
+        });
 
         const customId = interaction.customId;
 
         if (customId.startsWith('view_programme_')) {
-            const channelName = customId.replace('view_programme_', '');
+            const encodedChannelName = customId.replace('view_programme_', '');
+            logger.debug(`Looking for channel with encoded name: ${encodedChannelName}`);
+
+            // Find the actual channel by comparing sanitized names
+            const channels = await getChannelEntries();
+            const channel = channels.find(ch => {
+                const sanitized = ch.tvg_name?.replace(/[^\w-]/g, '_').slice(0, 80);
+                return sanitized === encodedChannelName;
+            });
+
+            if (!channel || !channel.tvg_name) {
+                logger.error(`Could not find channel for encoded name: ${encodedChannelName}`);
+                await interaction.followUp({
+                    content: `Could not find the selected channel. Please try again.`,
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+            }
+
+            const channelName = channel.tvg_name;
+            logger.info(`Found channel ${channelName}, fetching programme info`);
+
             const programmeInfo = await generateProgrammeInfo(channelName);
+
+            logger.debug(`Programme info result: ${JSON.stringify({
+                success: programmeInfo.success,
+                message: programmeInfo.message,
+                embedCount: programmeInfo.embeds.length
+            })}`);
 
             if (!programmeInfo.success) {
                 await interaction.followUp({
@@ -275,6 +220,12 @@ export async function handleProgrammeListButtonInteraction(interaction: ButtonIn
             await interaction.followUp({
                 embeds: programmeInfo.embeds,
                 flags: MessageFlags.Ephemeral
+            }).catch(err => {
+                logger.error(`Failed to send embeds: ${err}`);
+                interaction.followUp({
+                    content: "Error displaying programme information. Please try again later.",
+                    flags: MessageFlags.Ephemeral
+                }).catch(() => { });
             });
         } else if (customId.startsWith('programme_list_prev_') || customId.startsWith('programme_list_next_')) {
             const currentPage = parseInt(customId.split('_').pop() || '1');
@@ -304,10 +255,14 @@ export async function handleProgrammeListButtonInteraction(interaction: ButtonIn
         }
     } catch (error) {
         logger.error(`Error handling programme list button: ${error}`);
-        await interaction.followUp({
-            content: 'An error occurred while processing your request.',
-            flags: MessageFlags.Ephemeral
-        });
+        try {
+            await interaction.followUp({
+                content: 'An error occurred while processing your request.',
+                flags: MessageFlags.Ephemeral
+            });
+        } catch (followupError) {
+            logger.error(`Failed to send error message: ${followupError}`);
+        }
     }
 }
 
@@ -329,10 +284,32 @@ export async function handleProgrammeCommand(interaction: CommandInteraction) {
             return;
         }
 
-        await interaction.editReply({
+        const message = await interaction.editReply({
             content: result.message,
             embeds: result.embed ? [result.embed] : [],
             components: result.components || []
+        });
+
+        // Create a collector for button interactions
+        const collector = message.createMessageComponentCollector({
+            componentType: ComponentType.Button,
+            time: 10 * 60 * 1000 // 10 minutes timeout
+        });
+
+        collector.on('collect', async (buttonInteraction) => {
+            logger.debug(`Button interaction received: ${buttonInteraction.customId}`);
+            await handleProgrammeListButtonInteraction(buttonInteraction);
+        });
+
+        collector.on('end', () => {
+            logger.debug('Button collector ended');
+            // Update message to remove buttons when collector expires
+            interaction.editReply({
+                content: 'This selection has expired. Please run the command again to view programme information.',
+                components: []
+            }).catch(err => {
+                logger.error(`Failed to update expired message: ${err}`);
+            });
         });
 
         return;

@@ -316,6 +316,31 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
                 content: result.message,
                 ephemeral: false
             });
+        } else if (interaction.customId.startsWith('channel_list_prev_') || interaction.customId.startsWith('channel_list_next_')) {
+            // Handle pagination buttons
+            const currentPage = parseInt(interaction.customId.split('_').pop() || '1');
+            let newPage = currentPage;
+
+            if (interaction.customId.startsWith('channel_list_prev_')) {
+                newPage = Math.max(1, currentPage - 1);
+            } else if (interaction.customId.startsWith('channel_list_next_')) {
+                newPage = currentPage + 1;
+            }
+
+            const result = await generateChannelList(newPage);
+
+            if (result.success) {
+                await interaction.editReply({
+                    content: result.message,
+                    embeds: result.embed ? [result.embed] : [],
+                    components: result.components || []
+                });
+            } else {
+                await interaction.followUp({
+                    content: result.message,
+                    flags: MessageFlags.Ephemeral
+                });
+            }
         }
     } catch (error) {
         logger.error(`Error handling button interaction: ${error}`);

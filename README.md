@@ -79,7 +79,6 @@ You can check the available tags on the [Docker Hub page](https://hub.docker.com
 > [!Warning]
 > _The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required. You can install it following the instructions on the website._
 
-
 The project can also be run manually. To do so, first download the project and install the dependencies:
 
 ```bash

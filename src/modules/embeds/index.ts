@@ -1,17 +1,14 @@
-import { ProgrammeEmbedProcessor, type Programme } from './programme';
+import { ProgrammeEmbedProcessor } from './programme';
 import { ChannelEmbedProcessor, type Channel } from './channel';
 import type { EmbedOptions, EmbedResult, EmbedProcessor } from './types';
-import { createDiscordEmbed, type DiscordEmbedOptions } from './discord-adapter';
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { ProgrammeEntry } from '../../interfaces/iptv';
 
 export type { EmbedOptions, EmbedResult, EmbedProcessor };
 export { BaseEmbedProcessor } from './base';
 export { ProgrammeEmbedProcessor } from './programme';
-export type { Programme } from './programme';
 export { ChannelEmbedProcessor } from './channel';
 export type { Channel } from './channel';
-export { createDiscordEmbed } from './discord-adapter';
-export type { DiscordEmbedOptions } from './discord-adapter';
 
 // Create instances of our processors
 const programmeProcessor = new ProgrammeEmbedProcessor();
@@ -23,7 +20,12 @@ export const embedProcessors = [
     channelProcessor,
 ];
 
-// Helper function to process any embeddable content
+/**
+ * Processes any compatible data into a Discord embed
+ * @param data - Data to process
+ * @param options - Customization options for the embed
+ * @returns Generated embed result or null if no processor can handle the data
+ */
 export async function processEmbed(data: unknown, options: EmbedOptions = {}): Promise<EmbedResult | null> {
     for (const processor of embedProcessors) {
         if (processor.canProcess(data)) {
@@ -33,53 +35,69 @@ export async function processEmbed(data: unknown, options: EmbedOptions = {}): P
     return null;
 }
 
-// Helper functions for specific content types
-export function isProgramme(data: unknown): data is Programme {
+/**
+ * Type guard to check if data is a programme
+ * @param data - Data to check
+ * @returns True if the data is a programme
+ */
+export function isProgramme(data: unknown): data is ProgrammeEntry {
     return programmeProcessor.canProcess(data);
 }
 
+/**
+ * Type guard to check if data is a channel
+ * @param data - Data to check
+ * @returns True if the data is a channel
+ */
 export function isChannel(data: unknown): data is Channel {
     return channelProcessor.canProcess(data);
 }
 
-// Generate Discord embeds directly
+/**
+ * Creates a Discord embed for a programme
+ * @param programme - Programme data
+ * @param embedOptions - Customization options for the embed
+ * @returns Generated embed result
+ */
 export async function createProgrammeEmbed(
-    programme: Programme,
-    embedOptions: EmbedOptions = {},
-    discordOptions: DiscordEmbedOptions = {}
-): Promise<{
-    embed?: EmbedBuilder;
-    components?: ActionRowBuilder<ButtonBuilder>[];
-}> {
-    const embedResult = await programmeProcessor.process(programme, embedOptions);
-    return createDiscordEmbed(embedResult, {
+    programme: ProgrammeEntry,
+    embedOptions: EmbedOptions = {}
+): Promise<EmbedResult> {
+    return await programmeProcessor.process(programme, {
         title: `📺 ${programme.title}`,
         color: '#3fd15e',
-        ...discordOptions
+        ...embedOptions
     });
 }
 
+/**
+ * Creates a Discord embed for a channel
+ * @param channel - Channel data
+ * @param embedOptions - Customization options for the embed
+ * @returns Generated embed result
+ */
 export async function createChannelEmbed(
     channel: Channel,
-    embedOptions: EmbedOptions = {},
-    discordOptions: DiscordEmbedOptions = {}
-): Promise<{
-    embed?: EmbedBuilder;
-    components?: ActionRowBuilder<ButtonBuilder>[];
-}> {
-    const embedResult = await channelProcessor.process(channel, embedOptions);
-    return createDiscordEmbed(embedResult, {
+    embedOptions: EmbedOptions = {}
+): Promise<EmbedResult> {
+    return await channelProcessor.process(channel, {
         title: `📺 ${channel.tvg_name || 'Channel'} Stream`,
         color: '#3fd15e',
-        ...discordOptions
+        ...embedOptions
     });
 }
 
-// Utility to generate a stream embed with programme info
+/**
+ * Creates a rich Discord embed for a streaming channel with programme information
+ * @param channel - Channel being streamed
+ * @param currentProgramme - Currently airing programme, if available
+ * @param upcomingProgrammes - List of upcoming programmes
+ * @returns Discord embed for the stream
+ */
 export function createStreamEmbed(
     channel: Channel,
-    currentProgramme?: Programme | null,
-    upcomingProgrammes: Programme[] = []
+    currentProgramme?: ProgrammeEntry | null,
+    upcomingProgrammes: ProgrammeEntry[] = []
 ): EmbedBuilder {
     const streamEmbed = new EmbedBuilder()
         .setTitle(`📺 ${channel.tvg_name || 'Channel'} Stream`)

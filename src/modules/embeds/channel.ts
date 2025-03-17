@@ -1,54 +1,60 @@
+import { EmbedBuilder } from 'discord.js';
 import { BaseEmbedProcessor } from './base';
 import type { EmbedOptions, EmbedResult } from './types';
+import type { ChannelEntry } from '../../interfaces/iptv';
 
-export interface Channel {
-    id?: string;
-    tvg_id?: string;
-    tvg_name?: string;
-    tvg_logo?: string;
-    group_title?: string;
-    url?: string;
-}
-
-export class ChannelEmbedProcessor extends BaseEmbedProcessor<Channel> {
-    protected validateData(data: unknown): data is Channel {
-        const channel = data as Channel;
+/**
+ * Processor for creating embeds from IPTV channel data
+ */
+export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
+    /**
+     * Validates that the data is a valid channel entry
+     * @param data - Data to validate
+     * @returns Type guard indicating if the data is a valid channel entry
+     */
+    protected validateData(data: unknown): data is ChannelEntry {
+        const channel = data as ChannelEntry;
         return typeof channel === 'object' && channel !== null &&
-            (typeof channel.tvg_id === 'string' || typeof channel.id === 'string') &&
-            (typeof channel.tvg_name === 'string' || typeof channel.id === 'string');
+            (typeof channel.tvg_id === 'string' || typeof channel.tvg_id === 'string') &&
+            (typeof channel.tvg_name === 'string' || typeof channel.tvg_id === 'string');
     }
 
-    protected generateEmbed(channel: Channel, options: EmbedOptions): EmbedResult {
-        const { maxWidth = 640, maxHeight = 360, theme = 'light', autoplay = false } = options;
+    /**
+     * Generates a Discord embed from a channel entry
+     * @param channel - The channel data
+     * @param options - Customization options for the embed
+     * @returns Generated embed result
+     */
+    protected generateEmbed(channel: ChannelEntry, options: EmbedOptions): EmbedResult {
+        const { theme = 'light', title, color = '#3fd15e' } = options;
 
-        const channelId = channel.tvg_id || channel.id;
-        if (!channelId) {
-            throw new Error('Channel has no valid ID');
+        const embed = new EmbedBuilder()
+            .setTitle(title || `📺 ${channel.tvg_name || 'Channel'}`)
+            .setColor(color as any)
+            .setTimestamp();
+
+        if (channel.tvg_logo) {
+            embed.setThumbnail(channel.tvg_logo);
         }
 
-        const queryParams = new URLSearchParams();
-        queryParams.append('id', channelId);
-        if (channel.tvg_name) queryParams.append('name', channel.tvg_name);
-        if (channel.tvg_logo) queryParams.append('logo', channel.tvg_logo);
-        if (channel.group_title) queryParams.append('group', channel.group_title);
-        queryParams.append('theme', theme);
-        queryParams.append('autoplay', autoplay ? '1' : '0');
+        embed.addFields(
+            { name: 'Channel', value: channel.tvg_name || 'Unknown Channel', inline: true },
+            { name: 'Category', value: channel.group_title || 'No Category', inline: true }
+        );
 
-        // In a real implementation, this would be a proper URL to your embed service
-        const embedUrl = new URL(`https://your-embed-domain.com/channels/${channelId}`);
-        embedUrl.search = queryParams.toString();
+        if (channel.country) {
+            embed.addFields({ name: 'Country', value: channel.country, inline: true });
+        }
 
-        const html = this.getIframeHtml(embedUrl.toString(), maxWidth, maxHeight);
-
-        return {
-            html,
-            width: maxWidth,
-            height: maxHeight
-        };
+        return { embed };
     }
 
-    // Helper method to generate a basic Discord embed from channel data
-    public generateChannelInfoEmbed(channel: Channel): any {
+    /**
+     * Creates a simplified representation of a channel for use in other embeds
+     * @param channel - The channel data
+     * @returns Simplified channel information object
+     */
+    public generateChannelInfoEmbed(channel: ChannelEntry): any {
         return {
             name: channel.tvg_name || 'Unknown Channel',
             logo: channel.tvg_logo,
@@ -56,3 +62,5 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<Channel> {
         };
     }
 }
+
+export type Channel = ChannelEntry;

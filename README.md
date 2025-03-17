@@ -10,6 +10,7 @@
 [![Repo size](https://img.shields.io/github/repo-size/zbejas/orbiscast)](https://github.com/zbejas/orbiscast/)
 [![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/zbejas/orbiscast?sort=date)](https://hub.docker.com/r/zbejas/orbiscast)
 [![Docker Pulls](https://img.shields.io/docker/pulls/zbejas/orbiscast)](https://hub.docker.com/r/zbejas/orbiscast)
+[![CodeFactor](https://www.codefactor.io/repository/github/zbejas/orbiscast/badge)](https://www.codefactor.io/repository/github/zbejas/orbiscast)
 
 **OrbisCast** is a Discord bot that streams IPTV channels. It can be controlled by users with [commands](#commands) specified at the end of this document.
 
@@ -135,6 +136,6 @@ _The available channels will be shown when tab-completing the channel name, but 
 
 ## Known Issues
 
-If your issue is not listed here, please report it in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
+If your issue is not listed here and you think it should be, please check the [Issues](https://github.com/zbejas/orbiscast/issues) section. If it is not there, please open a new issue.
 
 - The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.

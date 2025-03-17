@@ -3,26 +3,29 @@ import { EmbedBuilder } from 'discord.js';
 import type { EmbedOptions, EmbedResult } from './types';
 import type { ChannelEntry, ProgrammeEntry } from '../../interfaces/iptv';
 
-export interface Programme {
-    id?: string;
-    title: string;
-    channel?: string;
-    description?: string;
-    start?: string;
-    stop?: string;
-    start_timestamp?: number;
-    stop_timestamp?: number;
-}
-
-export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
-    protected validateData(data: unknown): data is Programme {
-        const programme = data as Programme;
+/**
+ * Processor for creating embeds from TV programme data
+ */
+export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<ProgrammeEntry> {
+    /**
+     * Validates that the data is a valid programme entry
+     * @param data - Data to validate
+     * @returns Type guard indicating if the data is a valid programme entry
+     */
+    protected validateData(data: unknown): data is ProgrammeEntry {
+        const programme = data as ProgrammeEntry;
         return typeof programme === 'object' && programme !== null &&
             typeof programme.title === 'string';
     }
 
-    protected generateEmbed(programme: Programme, options: EmbedOptions): EmbedResult {
-        const { maxWidth = 640, maxHeight = 360, theme = 'light', autoplay = false } = options;
+    /**
+     * Generates a Discord embed from a programme entry
+     * @param programme - The programme data
+     * @param options - Customization options for the embed
+     * @returns Generated embed result
+     */
+    protected generateEmbed(programme: ProgrammeEntry, options: EmbedOptions): EmbedResult {
+        const { theme = 'light', title, color = '#3fd15e' } = options;
 
         const startDate = programme.start
             ? new Date(programme.start)
@@ -32,31 +35,39 @@ export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
             ? new Date(programme.stop)
             : programme.stop_timestamp ? new Date(programme.stop_timestamp * 1000) : null;
 
-        // Create a query param string from the programme details
-        const queryParams = new URLSearchParams();
-        if (programme.id) queryParams.append('id', programme.id);
-        queryParams.append('title', programme.title);
-        if (programme.channel) queryParams.append('channel', programme.channel);
-        if (startDate) queryParams.append('start', startDate.toISOString());
-        if (stopDate) queryParams.append('stop', stopDate.toISOString());
-        queryParams.append('theme', theme);
-        queryParams.append('autoplay', autoplay ? '1' : '0');
+        const embed = new EmbedBuilder()
+            .setTitle(title || programme.title)
+            .setColor(color as any)
+            .setTimestamp();
 
-        // In a real implementation, this would be a proper URL to your embed service
-        const embedUrl = new URL(`https://your-embed-domain.com/programmes`);
-        embedUrl.search = queryParams.toString();
+        if (startDate && stopDate) {
+            const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const date = startDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
-        const html = this.getIframeHtml(embedUrl.toString(), maxWidth, maxHeight);
+            embed.addFields(
+                { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
+                { name: 'Date', value: date, inline: true }
+            );
+        }
 
-        return {
-            html,
-            width: maxWidth,
-            height: maxHeight
-        };
+        if (programme.description) {
+            embed.setDescription(programme.description);
+        }
+
+        if (programme.category) {
+            embed.addFields({ name: 'Category', value: programme.category, inline: true });
+        }
+
+        return { embed };
     }
 
-    // Helper methods for Discord integration
-    public generateProgrammeInfoEmbed(programme: Programme): any {
+    /**
+     * Creates a simplified representation of a programme for use in other embeds
+     * @param programme - The programme data
+     * @returns Simplified programme information object
+     */
+    public generateProgrammeInfoEmbed(programme: ProgrammeEntry): any {
         const startDate = programme.start
             ? new Date(programme.start)
             : programme.start_timestamp ? new Date(programme.start_timestamp * 1000) : null;
@@ -80,7 +91,10 @@ export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
     }
 
     /**
-     * Finds the current show from a list of programmes
+     * Finds the currently airing programme from a list
+     * @param programmes - List of programmes to search
+     * @param now - Current timestamp in seconds
+     * @returns The current programme or the first one if none are current
      */
     public static getCurrentShow(programmes: ProgrammeEntry[], now: number): ProgrammeEntry | undefined {
         return programmes.find(p =>
@@ -89,7 +103,10 @@ export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
     }
 
     /**
-     * Generates programme information embeds for a given channel
+     * Generates a set of programme guide embeds for a channel
+     * @param channelName - Name of the channel
+     * @param channelProgrammes - List of programmes for the channel
+     * @returns Array of embeds for the channel's programme guide
      */
     public static generateProgrammeInfoEmbeds(
         channelName: string,
@@ -201,7 +218,12 @@ export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
     }
 
     /**
-     * Generates channel list embed for programme selection
+     * Creates a channel list embed for programme selection
+     * @param channelsToDisplay - Channels to include in the list
+     * @param liveChannel - Currently streaming channel, if any
+     * @param pageOption - Current page number
+     * @param totalPages - Total number of pages
+     * @returns Discord embed with channel list
      */
     public static generateChannelListEmbed(
         channelsToDisplay: ChannelEntry[],
@@ -231,5 +253,4 @@ export class ProgrammeEmbedProcessor extends BaseEmbedProcessor<Programme> {
     }
 }
 
-// Export the class instance for easier importing
 export const programmeEmbedProcessor = new ProgrammeEmbedProcessor();

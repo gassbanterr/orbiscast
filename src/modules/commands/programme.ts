@@ -186,7 +186,6 @@ export async function handleProgrammeListButtonInteraction(interaction: ButtonIn
             }
 
             const channelName = channel.tvg_name;
-            logger.info(`Found channel ${channelName}, fetching programme info`);
 
             const programmeInfo = await generateProgrammeInfo(channelName);
 

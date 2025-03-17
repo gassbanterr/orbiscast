@@ -127,11 +127,11 @@ The bot can be controlled using the following commands:
 |---------|-------------|
 | `/stream <channe>` | Start streaming the specified channel. |
 | `/programme <channel>` | Show the current programme for the specified channel. If no channel is all channels will be listed. |
-| `/channels <page>` | List all available channels. Page is optional, paging is done in groups of 25. |
+| `/channels <page>` | List all available channels. Page is optional. |
 | `/stop` | Stop the current stream. |
 | `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
 
-_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/list` command to see all available channels, and then either navigate from there or use the channel name directly._
+_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/channels` command to see all available channels, and then either navigate from there or use the channel name directly._
 
 ## Known Issues
 

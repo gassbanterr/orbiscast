@@ -67,7 +67,7 @@ export async function clearCache(): Promise<void> {
     try {
         await fs.rmdir(cacheDir, { recursive: true });
         await fs.mkdir(cacheDir, { recursive: true });
-        logger.debug("Cache directory cleared and recreated");
+        logger.debug("Cache directory cleared.");
     } catch (err) {
         logger.error(`Error clearing cache directory: ${err}`);
     }

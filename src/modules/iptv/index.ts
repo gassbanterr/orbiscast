@@ -169,9 +169,7 @@ function extractTextContent(element: any): string {
     if (typeof element === 'string') {
         return element;
     } else if (element._) {
-        return element._ || '';
-    } else if (element.$?.lang && element._) {
-        return element._ || '';
+        return element._;
     }
 
     return '';

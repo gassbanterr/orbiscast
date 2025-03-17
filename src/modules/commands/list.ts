@@ -120,7 +120,7 @@ export async function generateChannelList(pageOption: string | number | undefine
 
     return {
         success: true,
-        message: `Channel List (Page ${page}/${totalPages})`,
+        message: ``, // Empty message since we're using embed
         isAllChannels: false,
         page,
         totalPages,
@@ -148,10 +148,9 @@ export async function handleListCommand(interaction: CommandInteraction) {
             return;
         }
 
-        // Only include embeds when 'all' option is used
         const reply = await interaction.reply({
             content: result.message,
-            embeds: result.isAllChannels && result.embed ? [result.embed] : [],
+            embeds: result.embed ? [result.embed] : [],
             components: result.components || [],
             flags: MessageFlags.Ephemeral
         });
@@ -161,8 +160,20 @@ export async function handleListCommand(interaction: CommandInteraction) {
             componentType: ComponentType.Button,
         });
 
+        // Set a timeout to delete the message after 30 minutes
+        setTimeout(async () => {
+            try {
+                await reply.delete().catch(() => {
+                    // Message may already be deleted, ignore errors
+                });
+                collector.stop();
+            } catch (error) {
+                logger.error(`Error deleting list message: ${error}`);
+            }
+        }, 30 * 60 * 1000); // 30 minutes 
+
         collector.on('collect', async (i) => {
-            logger.debug(`Button clicked: ${i.customId}`);
+            logger.debug(`Button clicked: ${i.customId} by ${i.user.tag}`);
             try {
                 await i.deferUpdate();
                 if (i.customId.startsWith('play_channel_')) {
@@ -179,13 +190,14 @@ export async function handleListCommand(interaction: CommandInteraction) {
                     }
 
                     // Pass false for includeInteractionButtons when called from list
-                    const result = await executeStreamChannel(channelName, voiceChannel.id, i, false);
+                    const result = await executeStreamChannel(channelName, voiceChannel.id);
 
                     if (result.success) {
                         await i.followUp({
                             content: result.message,
                             embeds: result.embed ? [result.embed] : [],
-                            components: result.components || []
+                            components: result.components || [],
+                            flags: MessageFlags.Ephemeral
                         });
                     } else {
                         await i.followUp({
@@ -198,7 +210,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
 
                     await i.followUp({
                         content: result.message,
-                        ephemeral: false
+                        ephemeral: true
                     });
                 }
                 // ... handle other button types
@@ -242,7 +254,7 @@ export async function handlePlayChannelButton(interaction: ButtonInteraction) {
         }
 
         // Pass false for includeInteractionButtons since this is called from list
-        const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, false);
+        const result = await executeStreamChannel(channelName, voiceChannel.id);
 
         if (result.success) {
             await interaction.followUp({
@@ -283,7 +295,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
             }
 
             // Pass false for includeInteractionButtons since this is called from list
-            const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, false);
+            const result = await executeStreamChannel(channelName, voiceChannel.id);
 
             if (result.success) {
                 await interaction.followUp({
@@ -305,7 +317,6 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
                 ephemeral: false
             });
         }
-        // ... handle other button types
     } catch (error) {
         logger.error(`Error handling button interaction: ${error}`);
         try {

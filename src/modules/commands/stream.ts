@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ButtonInteraction, ComponentType, EmbedBuilder, GuildMember, Message, InteractionResponse } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, ButtonInteraction, ComponentType, EmbedBuilder, GuildMember, Message, InteractionResponse, MessageFlags } from 'discord.js';
 import { getLogger } from '../../utils/logger';
 import { config } from '../../utils/config';
 import { getChannelEntries, getProgrammeEntries } from '../../modules/database';
@@ -13,18 +13,35 @@ const PROGRAMME_BUTTON_ID = 'show_programme';
 const STOP_BUTTON_ID = 'stop_stream';
 
 /**
+ * Formats minutes into a human-readable time format
+ * @param minutes - Number of minutes
+ * @returns Formatted string like "5 min" or "1h 30min"
+ */
+function formatTimeUntilStart(minutes: number): string {
+    if (minutes < 60) {
+        return `${minutes} min`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (remainingMinutes === 0) {
+        return `${hours}h`;
+    }
+
+    return `${hours}h ${remainingMinutes}min`;
+}
+
+/**
  * Starts streaming the requested channel to a voice channel
  * @param channelName - Name of the channel to stream
  * @param voiceChannelId - Discord voice channel ID to stream to
  * @param interaction - Optional Discord interaction for button collectors
- * @param includeInteractionButtons - Whether to include buttons that require interaction handling
  * @returns Object containing success status, message, and UI components
  */
 export async function executeStreamChannel(
     channelName: string,
     voiceChannelId: string,
-    interaction?: CommandInteraction | ButtonInteraction,
-    includeInteractionButtons: boolean = true
 ): Promise<{
     success: boolean;
     message: string;
@@ -110,86 +127,41 @@ export async function executeStreamChannel(
                 );
             }
 
-            // Show different number of upcoming shows based on whether we include buttons
-            if (includeInteractionButtons) {
-                // Just show the next program when buttons are included
-                if (nextProgramme) {
-                    const startDate = nextProgramme.start
-                        ? new Date(nextProgramme.start)
-                        : new Date(nextProgramme.start_timestamp ? nextProgramme.start_timestamp * 1000 : Date.now());
-                    const stopDate = nextProgramme.stop
-                        ? new Date(nextProgramme.stop)
-                        : new Date(nextProgramme.stop_timestamp ? nextProgramme.stop_timestamp * 1000 : Date.now());
+            if (nextProgrammes && nextProgrammes.length > 0) {
+                const upcomingCount = Math.min(10, nextProgrammes.length);
+                const upcomingPrograms = nextProgrammes.slice(0, upcomingCount);
+
+                const upcomingFieldName = '⏭️ UPCOMING';
+
+                const upcomingListItems = upcomingPrograms.map(prog => {
+                    const startDate = prog.start
+                        ? new Date(prog.start)
+                        : new Date(prog.start_timestamp ? prog.start_timestamp * 1000 : Date.now());
 
                     const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                    const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
                     const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
 
-                    streamEmbed.addFields({
-                        name: '⏭️ UP NEXT',
-                        value: `**${nextProgramme.title}** at ${startTime} (in ${timeUntilStart} minutes)`,
-                        inline: false
-                    });
-                } else {
-                    streamEmbed.addFields(
-                        { name: '⏭️ UP NEXT', value: 'No upcoming programme information available', inline: false }
-                    );
-                }
+                    return `• **${prog.title}** at ${startTime} (in ${formatTimeUntilStart(timeUntilStart)})`;
+                });
+
+                streamEmbed.addFields({
+                    name: upcomingFieldName,
+                    value: upcomingListItems.join('\n'),
+                    inline: false,
+                });
             } else {
-                logger.warn(`Detected channel change from the list command. Interaction buttons are not yet implemented. Listing 10 upcoming programmes.`);
-                // Show more upcoming programs when buttons aren't included
-                if (nextProgrammes && nextProgrammes.length > 0) {
-                    const upcomingCount = Math.min(10, nextProgrammes.length);
-                    const upcomingPrograms = nextProgrammes.slice(0, upcomingCount);
-
-                    const upcomingFieldName = '⏭️ UPCOMING';
-
-                    const upcomingListItems = upcomingPrograms.map(prog => {
-                        const startDate = prog.start
-                            ? new Date(prog.start)
-                            : new Date(prog.start_timestamp ? prog.start_timestamp * 1000 : Date.now());
-
-                        const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                        const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
-
-                        return `• **${prog.title}** at ${startTime} (in ${timeUntilStart} min)`;
-                    });
-
-                    streamEmbed.addFields({
-                        name: upcomingFieldName,
-                        value: upcomingListItems.join('\n'),
-                        inline: false
-                    });
-                } else {
-                    streamEmbed.addFields(
-                        { name: '⏭️ UPCOMING', value: 'No upcoming programme information available', inline: false }
-                    );
-                }
+                streamEmbed.addFields(
+                    { name: '⏭️ UPCOMING', value: 'No upcoming programme information available', inline: false }
+                );
             }
 
             streamEmbed.setFooter({ text: 'Stream and programme information is subject to change' });
 
             let components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-            // Only add interactive buttons when explicitly requested and an interaction is provided
-            if (includeInteractionButtons) {
-                // Add buttons for programme guide and stopping the stream
-                const row = new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(PROGRAMME_BUTTON_ID)
-                            .setLabel('📋 Show Programme Guide')
-                            .setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder()
-                            .setCustomId(STOP_BUTTON_ID)
-                            .setLabel('⏹️ Stop Stream')
-                            .setStyle(ButtonStyle.Danger)
-                    );
-                components.push(row);
-            }
 
             // Add a function to setup the collector only when interaction buttons are included
-            const setupCollector = includeInteractionButtons ? (message: Message | InteractionResponse) => {
+            const setupCollector = (message: Message | InteractionResponse) => {
                 // Create a collector for button interactions
                 const collector = message.createMessageComponentCollector({
                     componentType: ComponentType.Button,
@@ -234,13 +206,14 @@ export async function executeStreamChannel(
                         } else if (i.customId.startsWith('play_channel_')) {
                             const playChannelName = i.customId.replace('play_channel_', '');
                             // Pass the current button interaction to maintain the interaction chain
-                            const playResult = await executeStreamChannel(playChannelName, voiceChannelId, i, true);
+                            const playResult = await executeStreamChannel(playChannelName, voiceChannelId);
 
                             if (playResult.success) {
                                 await i.followUp({
                                     content: playResult.message,
                                     embeds: playResult.embed ? [playResult.embed] : [],
-                                    components: playResult.components || []
+                                    components: playResult.components || [],
+                                    flags: MessageFlags.Ephemeral
                                 });
 
                                 // Setup collector for the new message if available
@@ -267,7 +240,7 @@ export async function executeStreamChannel(
                         }
                     }
                 });
-            } : undefined;
+            }
 
             // we will not await this as it's a void function, but we need to call it to start the stream
             startStreaming(channel);
@@ -301,10 +274,14 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
     try {
         const channelName = interaction.options.get('channel')?.value as string;
         if (!channelName) {
-            await interaction.reply('Please specify a channel name.');
+            await interaction.reply({
+                content: 'Please specify a channel name.',
+                ephemeral: true
+            });
             return;
         }
-        await interaction.deferReply();
+
+        await interaction.deferReply({ ephemeral: true });
 
         const member = interaction.member as GuildMember;
         const voiceChannel = member.voice.channel;
@@ -313,7 +290,7 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             return;
         }
 
-        const result = await executeStreamChannel(channelName, voiceChannel.id, interaction, true);
+        const result = await executeStreamChannel(channelName, voiceChannel.id);
 
         if (!result.success) {
             await interaction.editReply(result.message);
@@ -326,7 +303,6 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
             components: result.components || []
         });
 
-        // Create a collector for button interactions
         if (result.setupCollector) {
             result.setupCollector(reply);
         }

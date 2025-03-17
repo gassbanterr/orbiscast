@@ -6,19 +6,6 @@ import { getCurrentChannelEntry } from '../streaming';
 import { ProgrammeEmbedProcessor } from '../embeds/programme';
 
 const logger = getLogger();
-
-/**
- * Finds the current show from a list of programmes
- * @param programmes - List of programmes
- * @param now - Current timestamp
- * @returns The current show or the next upcoming show
- */
-function getCurrentShow(programmes: ProgrammeEntry[], now: number) {
-    return programmes.find(p =>
-        (p.start_timestamp ?? 0) <= now && (p.stop_timestamp ?? Infinity) >= now
-    ) || programmes[0];
-}
-
 /**
  * Generates programme information embeds for a given channel
  * @param channelName - Name of the channel to get programme information for

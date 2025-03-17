@@ -148,7 +148,6 @@ function fromPlaylistLine(line: string): ChannelEntry | null {
     }
 
     // If original format didn't match, try the alternative format
-    // Example: #EXTINF:-1 tvg-id="VeseljakTV.si" tvg-logo="https://i.imgur.com/JtWEyXX.png" group-title="Undefined",Veseljak TV (1080p)
     const ALT_PATTERN = /#EXTINF:(?<duration>.*?)\s+tvg-id="(?<tvg_id>.*?)"\s+tvg-logo="(?<tvg_logo>.*?)"\s+group-title="(?<group_title>.*?)"(?:,\s*(?<channel_name>.*?)(?:\s+\(.*?\))?)?$/;
     const altMatches = line.match(ALT_PATTERN);
 

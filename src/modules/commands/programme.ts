@@ -124,7 +124,7 @@ export async function generateProgrammeList(pageOption: number = 1): Promise<{
                 // Discord has a 100 character limit on custom IDs
                 const safeChannelName = channel.tvg_name.replace(/[^\w-]/g, '_').slice(0, 80);
 
-                logger.debug(`Creating button with ID: view_programme_${safeChannelName} for channel: ${channel.tvg_name}`);
+                //logger.debug(`Creating button with ID: view_programme_${safeChannelName} for channel: ${channel.tvg_name}`);
 
                 buttonRow.addComponents(
                     new ButtonBuilder()

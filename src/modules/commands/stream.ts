@@ -6,7 +6,6 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import { generateProgrammeInfo } from './programme';
 import { executeStopStream } from './stop';
-import { getCurrentChannelEntry } from '../streaming';
 
 const logger = getLogger();
 const PROGRAMME_BUTTON_ID = 'show_programme';
@@ -177,7 +176,7 @@ export async function executeStreamChannel(
                             if (!programmeInfo.success) {
                                 await i.followUp({
                                     content: programmeInfo.message,
-                                    ephemeral: true
+                                    flags: MessageFlags.Ephemeral
                                 });
                                 return;
                             }
@@ -185,7 +184,7 @@ export async function executeStreamChannel(
                             await i.followUp({
                                 content: `📺 Programme Guide for ${channelName}`,
                                 embeds: programmeInfo.embeds,
-                                ephemeral: true // Only visible to the user who clicked
+                                flags: MessageFlags.Ephemeral // Only visible to the user who clicked
                             });
                         } else if (i.customId === STOP_BUTTON_ID) {
                             logger.info(`Stop button clicked for stream: ${channelName} by ${i.user.tag}`);
@@ -194,7 +193,7 @@ export async function executeStreamChannel(
                             if (!stopResult.success) {
                                 await i.followUp({
                                     content: stopResult.message,
-                                    ephemeral: true
+                                    flags: MessageFlags.Ephemeral
                                 });
                                 return;
                             }
@@ -224,7 +223,7 @@ export async function executeStreamChannel(
                             } else {
                                 await i.followUp({
                                     content: playResult.message,
-                                    ephemeral: true
+                                    flags: MessageFlags.Ephemeral
                                 });
                             }
                         }
@@ -233,7 +232,7 @@ export async function executeStreamChannel(
                         try {
                             await i.followUp({
                                 content: 'An error occurred while processing your request.',
-                                ephemeral: true
+                                flags: MessageFlags.Ephemeral
                             });
                         } catch (followUpError) {
                             logger.error(`Error sending follow-up message: ${followUpError}`);
@@ -276,12 +275,12 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
         if (!channelName) {
             await interaction.reply({
                 content: 'Please specify a channel name.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const member = interaction.member as GuildMember;
         const voiceChannel = member.voice.channel;
@@ -311,7 +310,7 @@ export async function handleStreamCommand(interaction: CommandInteraction) {
         try {
             await interaction.reply({
                 content: 'An error occurred while processing your request.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } catch (replyError) {
             logger.error(`Error sending reply: ${replyError}`);

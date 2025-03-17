@@ -131,6 +131,84 @@ export async function generateChannelList(pageOption: string | number | undefine
 }
 
 /**
+ * Handles the play channel button interaction
+ * @param interaction - The Discord button interaction
+ * @param channelName - Name of the channel to play
+ */
+async function handlePlayChannelButton(interaction: ButtonInteraction, channelName: string) {
+    const member = interaction.member as GuildMember;
+    const voiceChannel = member.voice.channel;
+
+    if (!voiceChannel) {
+        await interaction.followUp({
+            content: 'You need to be in a voice channel to play this channel.',
+            flags: MessageFlags.Ephemeral
+        });
+        return;
+    }
+
+    // Pass false for includeInteractionButtons since this is called from list
+    const result = await executeStreamChannel(channelName, voiceChannel.id);
+
+    if (result.success) {
+        await interaction.followUp({
+            content: result.message,
+            embeds: result.embed ? [result.embed] : [],
+            components: result.components || []
+        });
+    } else {
+        await interaction.followUp({
+            content: result.message,
+            flags: MessageFlags.Ephemeral
+        });
+    }
+}
+
+/**
+ * Handles the stop stream button interaction
+ * @param interaction - The Discord button interaction
+ */
+async function handleStopStreamButton(interaction: ButtonInteraction) {
+    const result = await executeStopStream();
+
+    await interaction.followUp({
+        content: result.message,
+        ephemeral: false
+    });
+}
+
+/**
+ * Handles the pagination button interaction
+ * @param interaction - The Discord button interaction
+ * @param currentPage - Current page number
+ * @param isNext - Whether to go to next page (true) or previous page (false)
+ */
+async function handlePaginationButton(interaction: ButtonInteraction, currentPage: number, isNext: boolean) {
+    let newPage = currentPage;
+
+    if (isNext) {
+        newPage = currentPage + 1;
+    } else {
+        newPage = Math.max(1, currentPage - 1);
+    }
+
+    const result = await generateChannelList(newPage);
+
+    if (result.success) {
+        await interaction.editReply({
+            content: result.message,
+            embeds: result.embed ? [result.embed] : [],
+            components: result.components || []
+        });
+    } else {
+        await interaction.followUp({
+            content: result.message,
+            flags: MessageFlags.Ephemeral
+        });
+    }
+}
+
+/**
  * Handles the list command interaction, displaying available channels
  * @param interaction - The Discord command interaction
  */
@@ -176,44 +254,7 @@ export async function handleListCommand(interaction: CommandInteraction) {
             logger.debug(`Button clicked: ${i.customId} by ${i.user.tag}`);
             try {
                 await i.deferUpdate();
-                if (i.customId.startsWith('play_channel_')) {
-                    const channelName = i.customId.replace('play_channel_', '');
-                    const member = i.member as GuildMember;
-                    const voiceChannel = member.voice.channel;
-
-                    if (!voiceChannel) {
-                        await i.followUp({
-                            content: 'You need to be in a voice channel to play this channel.',
-                            flags: MessageFlags.Ephemeral
-                        });
-                        return;
-                    }
-
-                    // Pass false for includeInteractionButtons when called from list
-                    const result = await executeStreamChannel(channelName, voiceChannel.id);
-
-                    if (result.success) {
-                        await i.followUp({
-                            content: result.message,
-                            embeds: result.embed ? [result.embed] : [],
-                            components: result.components || [],
-                            flags: MessageFlags.Ephemeral
-                        });
-                    } else {
-                        await i.followUp({
-                            content: result.message,
-                            flags: MessageFlags.Ephemeral
-                        });
-                    }
-                } else if (i.customId === 'stop_stream') {
-                    const result = await executeStopStream();
-
-                    await i.followUp({
-                        content: result.message,
-                        ephemeral: true
-                    });
-                }
-                // ... handle other button types
+                await handleButtonInteraction(i);
             } catch (error) {
                 // ... error handling
             }
@@ -232,46 +273,6 @@ export async function handleListCommand(interaction: CommandInteraction) {
 }
 
 /**
- * Handles the play channel button interaction
- * @param interaction - The Discord button interaction
- */
-export async function handlePlayChannelButton(interaction: ButtonInteraction) {
-    await interaction.deferUpdate();
-
-    const customId = interaction.customId;
-    const channelName = customId.replace('play_channel_', '');
-
-    if (interaction.member && 'voice' in interaction.member) {
-        const member = interaction.member as GuildMember;
-        const voiceChannel = member.voice.channel;
-
-        if (!voiceChannel) {
-            await interaction.followUp({
-                content: 'You need to be in a voice channel to play this channel.',
-                flags: MessageFlags.Ephemeral
-            });
-            return;
-        }
-
-        // Pass false for includeInteractionButtons since this is called from list
-        const result = await executeStreamChannel(channelName, voiceChannel.id);
-
-        if (result.success) {
-            await interaction.followUp({
-                content: result.message,
-                embeds: result.embed ? [result.embed] : [],
-                components: result.components || []
-            });
-        } else {
-            await interaction.followUp({
-                content: result.message,
-                flags: MessageFlags.Ephemeral
-            });
-        }
-    }
-}
-
-/**
  * Handles button interactions from channel list
  * @param interaction - The Discord button interaction
  */
@@ -279,68 +280,19 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     logger.debug(`Button clicked: ${interaction.customId}`);
 
     try {
-        await interaction.deferUpdate();
+        if (!interaction.deferred) {
+            await interaction.deferUpdate();
+        }
 
         if (interaction.customId.startsWith('play_channel_')) {
             const channelName = interaction.customId.replace('play_channel_', '');
-            const member = interaction.member as GuildMember;
-            const voiceChannel = member.voice.channel;
-
-            if (!voiceChannel) {
-                await interaction.followUp({
-                    content: 'You need to be in a voice channel to play this channel.',
-                    flags: MessageFlags.Ephemeral
-                });
-                return;
-            }
-
-            // Pass false for includeInteractionButtons since this is called from list
-            const result = await executeStreamChannel(channelName, voiceChannel.id);
-
-            if (result.success) {
-                await interaction.followUp({
-                    content: result.message,
-                    embeds: result.embed ? [result.embed] : [],
-                    components: result.components || []
-                });
-            } else {
-                await interaction.followUp({
-                    content: result.message,
-                    flags: MessageFlags.Ephemeral
-                });
-            }
+            await handlePlayChannelButton(interaction, channelName);
         } else if (interaction.customId === 'stop_stream') {
-            const result = await executeStopStream();
-
-            await interaction.followUp({
-                content: result.message,
-                ephemeral: false
-            });
+            await handleStopStreamButton(interaction);
         } else if (interaction.customId.startsWith('channel_list_prev_') || interaction.customId.startsWith('channel_list_next_')) {
-            // Handle pagination buttons
             const currentPage = parseInt(interaction.customId.split('_').pop() || '1');
-            let newPage = currentPage;
-
-            if (interaction.customId.startsWith('channel_list_prev_')) {
-                newPage = Math.max(1, currentPage - 1);
-            } else if (interaction.customId.startsWith('channel_list_next_')) {
-                newPage = currentPage + 1;
-            }
-
-            const result = await generateChannelList(newPage);
-
-            if (result.success) {
-                await interaction.editReply({
-                    content: result.message,
-                    embeds: result.embed ? [result.embed] : [],
-                    components: result.components || []
-                });
-            } else {
-                await interaction.followUp({
-                    content: result.message,
-                    flags: MessageFlags.Ephemeral
-                });
-            }
+            const isNext = interaction.customId.startsWith('channel_list_next_');
+            await handlePaginationButton(interaction, currentPage, isNext);
         }
     } catch (error) {
         logger.error(`Error handling button interaction: ${error}`);

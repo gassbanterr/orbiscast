@@ -112,83 +112,83 @@ async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
 
         for (const programme of parsedXml.tv.programme) {
             try {
-                // Extract title, handling nested structure with lang attribute
-                let title = '';
-                if (typeof programme.title?.[0] === 'string') {
-                    title = programme.title[0] || '';
-                } else if (programme.title?.[0]?._) {
-                    title = programme.title[0]._ || '';
-                } else if (programme.title?.[0]?.$?.lang && programme.title[0]._) {
-                    title = programme.title[0]._ || '';
-                }
-
-                // Extract description, handling nested structure with lang attribute
-                let description = '';
-                if (typeof programme.desc?.[0] === 'string') {
-                    description = programme.desc[0] || '';
-                } else if (programme.desc?.[0]?._) {
-                    description = programme.desc[0]._ || '';
-                } else if (programme.desc?.[0]?.$?.lang && programme.desc[0]._) {
-                    description = programme.desc[0]._ || '';
-                }
-
-                // Extract category if available
-                let category = '';
-                if (programme.category?.[0]?._) {
-                    category = programme.category[0]._;
-                } else if (typeof programme.category?.[0] === 'string') {
-                    category = programme.category[0];
-                }
-
-                const startStr = programme.$.start;
-                const stopStr = programme.$.stop;
-
-                if (!startStr || !stopStr) {
-                    logger.error(`Programme missing start/stop times: ${title}`);
-                    continue;
-                }
-
-                logger.debug(`Parsing programme "${title}" with start: ${startStr}, stop: ${stopStr}`);
-
-                const start = parseDate(startStr);
-                const stop = parseDate(stopStr);
-
-                if (start.getTime() === stop.getTime()) {
-                    logger.warn(`Programme "${title}" has identical start and stop times: ${startStr}`);
-                }
-
-                programmes.push({
-                    start: start.toISOString(),
-                    stop: stop.toISOString(),
-                    start_timestamp: Math.floor(start.getTime() / 1000),
-                    stop_timestamp: Math.floor(stop.getTime() / 1000),
-                    channel: programme.$.channel,
-                    title,
-                    description,
-                    category,
-                    created_at: new Date().toISOString(),
-                });
+                const parsedProgramme = parseProgrammeEntry(programme);
+                programmes.push(parsedProgramme);
             } catch (error) {
-                const title = programme.title?.[0]?._ || programme.title?.[0] || 'unknown';
+                const title = extractTextContent(programme.title?.[0]) || 'unknown';
                 logger.error(`Error parsing programme "${title}": ${error}`);
             }
         }
 
-        // Add summary statistics
-        const channels = new Set(programmes.map(p => p.channel)).size;
-        logger.info(`Parsed ${programmes.length} programmes across ${channels} channels from XMLTV file`);
-
-        // Check for date range in the data
-        if (programmes.length > 0) {
-            const dates = programmes.map(p => new Date(p.start));
-            const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-            const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-            logger.info(`Programme date range: ${minDate.toISOString()} to ${maxDate.toISOString()}`);
-        }
+        logProgrammeStatistics(programmes);
     } catch (error) {
         logger.error(`Error parsing XMLTV: ${error}`);
     }
     return programmes;
+}
+
+function parseProgrammeEntry(programme: any): ProgrammeEntry {
+    const title = extractTextContent(programme.title?.[0]);
+    const description = extractTextContent(programme.desc?.[0]);
+    const category = extractTextContent(programme.category?.[0]);
+
+    const startStr = programme.$.start;
+    const stopStr = programme.$.stop;
+
+    if (!startStr || !stopStr) {
+        throw new Error(`Programme missing start/stop times: ${title}`);
+    }
+
+    logger.debug(`Parsing programme "${title}" with start: ${startStr}, stop: ${stopStr}`);
+
+    const start = parseDate(startStr);
+    const stop = parseDate(stopStr);
+
+    if (start.getTime() === stop.getTime()) {
+        logger.warn(`Programme "${title}" has identical start and stop times: ${startStr}`);
+    }
+
+    return {
+        start: start.toISOString(),
+        stop: stop.toISOString(),
+        start_timestamp: Math.floor(start.getTime() / 1000),
+        stop_timestamp: Math.floor(stop.getTime() / 1000),
+        channel: programme.$.channel,
+        title,
+        description,
+        category,
+        created_at: new Date().toISOString(),
+    };
+}
+
+function extractTextContent(element: any): string {
+    if (!element) {
+        return '';
+    }
+
+    if (typeof element === 'string') {
+        return element;
+    } else if (element._) {
+        return element._ || '';
+    } else if (element.$?.lang && element._) {
+        return element._ || '';
+    }
+
+    return '';
+}
+
+function logProgrammeStatistics(programmes: ProgrammeEntry[]): void {
+    // Add summary statistics
+    const channels = new Set(programmes.map(p => p.channel)).size;
+    logger.info(`Parsed ${programmes.length} programmes across ${channels} channels from XMLTV file`);
+
+    // Check for date range in the data
+    if (programmes.length > 0) {
+        const dates = programmes.map(p => new Date(p.start));
+        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        logger.info(`Programme date range: ${minDate.toISOString()} to ${maxDate.toISOString()}`);
+    }
 }
 
 function parseDate(dateString: string): Date {

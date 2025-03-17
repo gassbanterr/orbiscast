@@ -128,12 +128,24 @@ export async function fillDbProgrammes(force = false): Promise<void> {
  * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
  */
 function fromPlaylistLine(line: string): ChannelEntry | null {
-    // First try the original format
-    const ORIGINAL_PATTERN = /#EXTINF:.*\s*channelID="(?<xui_id>.*?)"\s*tvg-chno="(?<tvg_chno>.*?)"\s*tvg-name="(?<tvg_name>.*?)"\s*tvg-id="(?<tvg_id>.*?)"\s*tvg-logo="(?<tvg_logo>.*?)"\s*group-title="(?<group_title>.*?)"/;
-    const originalMatches = line.match(ORIGINAL_PATTERN);
+    // Try each parsing strategy in sequence
+    return parseOriginalFormat(line) ||
+        parseAlternativeFormat(line) ||
+        parseFlexibleFormat(line);
+}
 
-    if (originalMatches?.groups) {
-        const { xui_id, tvg_id, tvg_name, tvg_logo, group_title } = originalMatches.groups;
+/**
+ * Attempts to parse a playlist line using the original format pattern.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseOriginalFormat(line: string): ChannelEntry | null {
+    const ORIGINAL_PATTERN = /#EXTINF:.*\s*channelID="(?<xui_id>.*?)"\s*tvg-chno="(?<tvg_chno>.*?)"\s*tvg-name="(?<tvg_name>.*?)"\s*tvg-id="(?<tvg_id>.*?)"\s*tvg-logo="(?<tvg_logo>.*?)"\s*group-title="(?<group_title>.*?)"/;
+    const matches = line.match(ORIGINAL_PATTERN);
+
+    if (matches?.groups) {
+        const { xui_id, tvg_id, tvg_name, tvg_logo, group_title } = matches.groups;
         const [prefix] = (group_title || '').split(': |');
         return {
             xui_id: parseInt(xui_id || '0'),
@@ -147,12 +159,21 @@ function fromPlaylistLine(line: string): ChannelEntry | null {
         };
     }
 
-    // If original format didn't match, try the alternative format
-    const ALT_PATTERN = /#EXTINF:(?<duration>.*?)\s+tvg-id="(?<tvg_id>.*?)"\s+tvg-logo="(?<tvg_logo>.*?)"\s+group-title="(?<group_title>.*?)"(?:,\s*(?<channel_name>.*?)(?:\s+\(.*?\))?)?$/;
-    const altMatches = line.match(ALT_PATTERN);
+    return null;
+}
 
-    if (altMatches?.groups) {
-        const { tvg_id, tvg_logo, group_title, channel_name } = altMatches.groups;
+/**
+ * Attempts to parse a playlist line using the alternative format pattern.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseAlternativeFormat(line: string): ChannelEntry | null {
+    const ALT_PATTERN = /#EXTINF:(?<duration>.*?)\s+tvg-id="(?<tvg_id>.*?)"\s+tvg-logo="(?<tvg_logo>.*?)"\s+group-title="(?<group_title>.*?)"(?:,\s*(?<channel_name>.*?)(?:\s+\(.*?\))?)?$/;
+    const matches = line.match(ALT_PATTERN);
+
+    if (matches?.groups) {
+        const { tvg_id, tvg_logo, group_title, channel_name } = matches.groups;
         // Use the channel name as tvg_name if available
         const tvg_name = channel_name || tvg_id;
         const [prefix] = (group_title || '').split(': |');
@@ -171,44 +192,56 @@ function fromPlaylistLine(line: string): ChannelEntry | null {
         };
     }
 
-    // If no pattern matched, try a more flexible approach for any EXTINF line
-    if (line.startsWith('#EXTINF:')) {
-        logger.debug(`Trying flexible parsing for line: ${line.substring(0, 100)}...`);
+    return null;
+}
 
-        // Extract whatever we can find
-        const tvgIdMatch = line.match(/tvg-id="([^"]+)"/);
-        const tvgLogoMatch = line.match(/tvg-logo="([^"]+)"/);
-        const groupTitleMatch = line.match(/group-title="([^"]+)"/);
+/**
+ * Attempts to parse a playlist line using a flexible approach when standard patterns fail.
+ * Extracts whatever information is available in the line.
+ * 
+ * @param {string} line - A line from the M3U playlist
+ * @returns {ChannelEntry | null} - Channel entry or null if parsing fails
+ */
+function parseFlexibleFormat(line: string): ChannelEntry | null {
+    if (!line.startsWith('#EXTINF:')) {
+        return null;
+    }
 
-        // Look for channel name after the last comma
-        const lastCommaIndex = line.lastIndexOf(',');
-        let channelName = '';
+    logger.debug(`Trying flexible parsing for line: ${line.substring(0, 100)}...`);
 
-        if (lastCommaIndex !== -1) {
-            channelName = line.substring(lastCommaIndex + 1).trim();
-            // Remove quality indicator if present (anything in parentheses at the end)
-            channelName = channelName.replace(/\s+\([^)]+\)\s*$/, '');
-        }
+    // Extract available attributes
+    const tvgIdMatch = line.match(/tvg-id="([^"]+)"/);
+    const tvgLogoMatch = line.match(/tvg-logo="([^"]+)"/);
+    const groupTitleMatch = line.match(/group-title="([^"]+)"/);
 
-        const tvgId = tvgIdMatch ? tvgIdMatch[1] : '';
-        const tvgName = channelName || tvgId;
-        const tvgLogo = tvgLogoMatch ? tvgLogoMatch[1] : '';
-        const groupTitle = groupTitleMatch ? groupTitleMatch[1] : '';
-        const country = groupTitle ? groupTitle.split(': |')[0] : '';
+    // Extract channel name from after the last comma
+    const lastCommaIndex = line.lastIndexOf(',');
+    let channelName = '';
 
-        if (tvgName) {
-            logger.debug(`Flexible parsing found channel: ${tvgName}`);
-            return {
-                xui_id: 0,
-                tvg_id: tvgId,
-                tvg_name: tvgName,
-                tvg_logo: tvgLogo,
-                group_title: groupTitle,
-                url: '',
-                created_at: undefined,
-                country
-            };
-        }
+    if (lastCommaIndex !== -1) {
+        channelName = line.substring(lastCommaIndex + 1).trim();
+        // Remove quality indicator if present (anything in parentheses at the end)
+        channelName = channelName.replace(/\s+\([^)]+\)\s*$/, '');
+    }
+
+    const tvgId = tvgIdMatch ? tvgIdMatch[1] : '';
+    const tvgName = channelName || tvgId;
+    const tvgLogo = tvgLogoMatch ? tvgLogoMatch[1] : '';
+    const groupTitle = groupTitleMatch ? groupTitleMatch[1] : '';
+    const country = groupTitle ? groupTitle.split(': |')[0] : '';
+
+    if (tvgName) {
+        logger.debug(`Flexible parsing found channel: ${tvgName}`);
+        return {
+            xui_id: 0,
+            tvg_id: tvgId,
+            tvg_name: tvgName,
+            tvg_logo: tvgLogo,
+            group_title: groupTitle,
+            url: '',
+            created_at: undefined,
+            country
+        };
     }
 
     return null;

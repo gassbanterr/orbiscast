@@ -329,30 +329,10 @@ export async function handleProgrammeCommand(interaction: CommandInteraction) {
             return;
         }
 
-        const reply = await interaction.editReply({
+        await interaction.editReply({
             content: result.message,
             embeds: result.embed ? [result.embed] : [],
             components: result.components || []
-        });
-
-        // Create a collector for button interactions
-        const collector = reply.createMessageComponentCollector({
-            componentType: ComponentType.Button,
-            time: 30 * 60 * 1000 // 30 minutes timeout
-        });
-
-        collector.on('collect', handleProgrammeListButtonInteraction);
-
-        collector.on('end', async () => {
-            try {
-                // Try to remove components when collector expires
-                await interaction.editReply({
-                    components: []
-                });
-            } catch (error) {
-                // Message might be deleted or already modified
-                logger.debug(`Could not update components: ${error}`);
-            }
         });
 
         return;

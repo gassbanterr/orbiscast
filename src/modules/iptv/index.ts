@@ -9,6 +9,13 @@ import type { ChannelEntry, ProgrammeEntry } from '../../interfaces/iptv';
 
 const logger = getLogger();
 
+/**
+ * Downloads IPTV data, caches it, and fills the database with channels and programmes.
+ * After completion, schedules regular refresh.
+ * 
+ * @param {boolean} force - Whether to force download even if cache exists
+ * @returns {Promise<void>}
+ */
 export async function downloadCacheAndFillDb(force = false): Promise<void> {
     logger.debug('Cache download started and parsing with force: ' + force);
     await fillDbChannels(force);
@@ -18,6 +25,12 @@ export async function downloadCacheAndFillDb(force = false): Promise<void> {
     scheduleIPTVRefresh();
 }
 
+/**
+ * Clears and fills the channels database with data from the playlist file.
+ * 
+ * @param {boolean} force - Whether to force download even if cache exists
+ * @returns {Promise<void>}
+ */
 export async function fillDbChannels(force = true): Promise<void> {
     logger.debug('Starting to fill the channels database');
 
@@ -49,6 +62,13 @@ export async function fillDbChannels(force = true): Promise<void> {
     }
 }
 
+/**
+ * Clears and fills the programme database with data from the XMLTV file.
+ * Only refreshes if data is stale or forced.
+ * 
+ * @param {boolean} force - Whether to force download even if cache exists
+ * @returns {Promise<void>}
+ */
 export async function fillDbProgrammes(force = false): Promise<void> {
     logger.debug('Starting to fill the programmes database');
 
@@ -81,6 +101,12 @@ export async function fillDbProgrammes(force = false): Promise<void> {
     }
 }
 
+/**
+ * Parses a playlist line to extract channel information.
+ * 
+ * @param {string} line - A line from the M3U playlist starting with #EXTINF
+ * @returns {ChannelEntry | null} - Channel object or null if parsing fails
+ */
 function fromPlaylistLine(line: string): ChannelEntry | null {
     const PATTERN = /#EXTINF:.*\s*channelID="(?<xui_id>.*?)"\s*tvg-chno="(?<tvg_chno>.*?)"\s*tvg-name="(?<tvg_name>.*?)"\s*tvg-id="(?<tvg_id>.*?)"\s*tvg-logo="(?<tvg_logo>.*?)"\s*group-title="(?<group_title>.*?)"/;
     const matches = line.match(PATTERN);
@@ -92,6 +118,12 @@ function fromPlaylistLine(line: string): ChannelEntry | null {
     return null;
 }
 
+/**
+ * Parses an XMLTV file to extract programme entries.
+ * 
+ * @param {string} filePath - Path to the XMLTV file
+ * @returns {Promise<ProgrammeEntry[]>} - Array of parsed programme entries
+ */
 async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
     const programmes: ProgrammeEntry[] = [];
     try {
@@ -127,6 +159,13 @@ async function parseXMLTV(filePath: string): Promise<ProgrammeEntry[]> {
     return programmes;
 }
 
+/**
+ * Parses a single programme entry from XMLTV data.
+ * 
+ * @param {any} programme - Raw programme data from XMLTV
+ * @returns {ProgrammeEntry} - Structured programme entry
+ * @throws {Error} - If programme is missing required fields
+ */
 function parseProgrammeEntry(programme: any): ProgrammeEntry {
     const title = extractTextContent(programme.title?.[0]);
     const description = extractTextContent(programme.desc?.[0]);
@@ -161,6 +200,12 @@ function parseProgrammeEntry(programme: any): ProgrammeEntry {
     };
 }
 
+/**
+ * Extracts text content from an XMLTV element.
+ * 
+ * @param {any} element - XML element that may contain text
+ * @returns {string} - Extracted text or empty string if not found
+ */
 function extractTextContent(element: any): string {
     if (!element) {
         return '';
@@ -175,6 +220,11 @@ function extractTextContent(element: any): string {
     return '';
 }
 
+/**
+ * Logs statistics about the parsed programme data.
+ * 
+ * @param {ProgrammeEntry[]} programmes - Array of programme entries
+ */
 function logProgrammeStatistics(programmes: ProgrammeEntry[]): void {
     // Add summary statistics
     const channels = new Set(programmes.map(p => p.channel)).size;
@@ -189,6 +239,13 @@ function logProgrammeStatistics(programmes: ProgrammeEntry[]): void {
     }
 }
 
+/**
+ * Parses a date string in the XMLTV format.
+ * 
+ * @param {string} dateString - Date string in YYYYMMDDHHMMSS format with optional timezone
+ * @returns {Date} - Parsed date object
+ * @throws {Error} - If the date string format is invalid
+ */
 function parseDate(dateString: string): Date {
     // Split by space to separate timestamp from timezone offset
     const parts = dateString.split(' ');
@@ -224,6 +281,13 @@ function parseDate(dateString: string): Date {
     return new Date(date.getTime() - offset);
 }
 
+/**
+ * Fetches data from a URL with retry logic.
+ * 
+ * @param {string} url - URL to fetch data from
+ * @param {string} cacheFileName - Name to use when caching the file
+ * @returns {Promise<Buffer | null>} - Fetched content or null if failed
+ */
 async function fetchWithRetry(url: string, cacheFileName: string): Promise<Buffer | null> {
     const maxRetries = 3;
     let retryDelay = 5;
@@ -256,18 +320,32 @@ async function fetchWithRetry(url: string, cacheFileName: string): Promise<Buffe
     return null;
 }
 
+/**
+ * Checks if the programme data in the database is stale.
+ * 
+ * @returns {Promise<boolean>} - True if data is stale, false otherwise
+ */
 async function isProgrammeDataStale(): Promise<boolean> {
     const programmes = await getProgrammeEntries();
     const createdAt = programmes?.[0]?.created_at;
     return !createdAt || isOlderThanSetRefreshTime(createdAt);
 }
 
+/**
+ * Checks if a date is older than the configured refresh time.
+ * 
+ * @param {string} dateString - ISO date string to check
+ * @returns {boolean} - True if the date is older than the refresh interval
+ */
 function isOlderThanSetRefreshTime(dateString: string): boolean {
     const date = new Date(dateString);
     const refreshTime = Math.max(config.REFRESH_IPTV * 60 * 1000 - 3 * 60 * 1000, 0);
     return (Date.now() - date.getTime()) > refreshTime;
 }
 
+/**
+ * Schedules periodic IPTV data refresh based on configuration.
+ */
 function scheduleIPTVRefresh() {
     const refreshInterval = config.REFRESH_IPTV * 60 * 1000; // Convert minutes to milliseconds
     setInterval(async () => {

@@ -6,30 +6,11 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { initializeStreamer, joinVoiceChannel, startStreaming, stopStreaming } from '../../modules/streaming';
 import { generateProgrammeInfo } from './programme';
 import { executeStopStream } from './stop';
+import { createStreamEmbed } from '../embeds';
 
 const logger = getLogger();
 const PROGRAMME_BUTTON_ID = 'show_programme';
 const STOP_BUTTON_ID = 'stop_stream';
-
-/**
- * Formats minutes into a human-readable time format
- * @param minutes - Number of minutes
- * @returns Formatted string like "5 min" or "1h 30min"
- */
-function formatTimeUntilStart(minutes: number): string {
-    if (minutes < 60) {
-        return `${minutes} min`;
-    }
-
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    if (remainingMinutes === 0) {
-        return `${hours}h`;
-    }
-
-    return `${hours}h ${remainingMinutes}min`;
-}
 
 /**
  * Starts streaming the requested channel to a voice channel
@@ -93,71 +74,11 @@ export async function executeStreamChannel(
                 .filter(p => (p.start_timestamp ?? 0) > now)
                 .sort((a, b) => (a.start_timestamp ?? 0) - (b.start_timestamp ?? 0));
 
-            const nextProgramme = nextProgrammes.length > 0 ? nextProgrammes[0] : null;
+            // Use our new embed creator function
+            const streamEmbed = createStreamEmbed(channel, currentProgramme, nextProgrammes);
 
-            const streamEmbed = new EmbedBuilder()
-                .setTitle(`📺 ${channelName} Stream`)
-                .setColor('#3fd15e')
-                .setTimestamp();
-
-            if (currentProgramme) {
-                const startDate = currentProgramme.start
-                    ? new Date(currentProgramme.start)
-                    : new Date(currentProgramme.start_timestamp ? currentProgramme.start_timestamp * 1000 : Date.now());
-                const stopDate = currentProgramme.stop
-                    ? new Date(currentProgramme.stop)
-                    : new Date(currentProgramme.stop_timestamp ? currentProgramme.stop_timestamp * 1000 : Date.now());
-
-                const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                const stopTime = stopDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-
-                const description = typeof currentProgramme.description === 'string'
-                    ? currentProgramme.description.substring(0, 150) + (currentProgramme.description.length > 150 ? '...' : '')
-                    : 'No description available';
-
-                streamEmbed.addFields(
-                    { name: '🔴 NOW PLAYING', value: currentProgramme.title, inline: false },
-                    { name: 'Time', value: `${startTime} - ${stopTime}`, inline: true },
-                    { name: 'Description', value: description }
-                );
-            } else {
-                streamEmbed.addFields(
-                    { name: '🔴 NOW PLAYING', value: 'No current programme information available', inline: false }
-                );
-            }
-
-            if (nextProgrammes && nextProgrammes.length > 0) {
-                const upcomingCount = Math.min(10, nextProgrammes.length);
-                const upcomingPrograms = nextProgrammes.slice(0, upcomingCount);
-
-                const upcomingFieldName = '⏭️ UPCOMING';
-
-                const upcomingListItems = upcomingPrograms.map(prog => {
-                    const startDate = prog.start
-                        ? new Date(prog.start)
-                        : new Date(prog.start_timestamp ? prog.start_timestamp * 1000 : Date.now());
-
-                    const startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                    const timeUntilStart = Math.floor((startDate.getTime() - Date.now()) / 60000); // minutes until start
-
-                    return `• **${prog.title}** at ${startTime} (in ${formatTimeUntilStart(timeUntilStart)})`;
-                });
-
-                streamEmbed.addFields({
-                    name: upcomingFieldName,
-                    value: upcomingListItems.join('\n'),
-                    inline: false,
-                });
-            } else {
-                streamEmbed.addFields(
-                    { name: '⏭️ UPCOMING', value: 'No upcoming programme information available', inline: false }
-                );
-            }
-
-            streamEmbed.setFooter({ text: 'Stream and programme information is subject to change' });
-
+            // This is empty for now, but we can add buttons to the embed
             let components: ActionRowBuilder<ButtonBuilder>[] = [];
-
 
             // Add a function to setup the collector only when interaction buttons are included
             const setupCollector = (message: Message | InteractionResponse) => {

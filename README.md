@@ -19,7 +19,7 @@ The bot was made to simplify watch parties with friends. It is also useful for t
 This project is still in development, so expect bugs and missing features. If you find any issues, please report them in the [Issues](https://github.com/zbejas/orbiscast/issues) section.
 
 > [!CAUTION]
-> I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed. This tool is intended for educational and testing purposes only.
+> I am not responsible for any misuse of this tool. Ensure to comply with all applicable copyright laws and obtain necessary permissions for the IPTV content being streamed.
 >
 > _Using self-bots is against [Discord's terms of service](https://discord.com/guidelines) and may result in account termination. Use at your own risk._
 
@@ -29,7 +29,6 @@ This project is still in development, so expect bugs and missing features. If yo
 
 You will need to set a few things up before you can run the bot:
 
-- **Note**: Do not share any of the tokens [mentioned below](#discord-configuration) with anyone. If you do, regenerate them immediately.
 - Create a bot on the [Discord Developer Portal](https://discord.com/developers/applications) and get the bot token, and invite the bot to your server.
   - You can follow the instructions [here](https://discordpy.readthedocs.io/en/stable/discord.html) to create a bot and get the token and invite link. Make sure to give the bot the necessary permissions:
     - `bot`
@@ -42,8 +41,12 @@ You will need to set a few things up before you can run the bot:
   - **Note**: Be careful when using any third-party tools to get your user token, as they may be malicious. I recommend using the method in the gist.
 - Create a `.env` file in the project directory and fill in the required environment variables (see below). You can use the provided `.env.example` file as a template.
 
-> [!Warning]
-> Note that in my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.
+> [!WARNING]
+> Do not share any of the tokens mentioned above with anyone. If you do, regenerate them immediately by:
+>
+> - Regenerating the bot token in the [Discord Developer Portal](https://discord.com/developers/applications).
+> - Regenerating the user token by logging out and back in to Discord.
+>   - If you used incognito mode to get the token, you can go to Discord Settings > Devices > Log out of all known devices (or just log out of the specific session).
 
 ### Docker
 
@@ -62,13 +65,14 @@ or to run it in the background:
 docker compose up -d
 ```
 
-You can check the logs using:
-
-```bash
-docker compose logs -f
-```
-
-_The `-f` flag is optional and is used to follow the logs._
+> [!TIP]
+> You can check the logs using:
+>
+> ```bash
+> docker compose logs -f
+> ```
+>
+> _The `-f` flag is optional and is used to follow the logs._
 
 All of the app data is stored in `/app/data`. The cache is stored in `/app/cache` or RAM, depending on the `RAM_CACHE` and `CACHE_DIR` environment variables.
 
@@ -76,9 +80,8 @@ You can check the available tags on the [Docker Hub page](https://hub.docker.com
 
 ### Manual
 
-> [!Warning]
-> _The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required. You can install it following the instructions on the website._
-
+> [!IMPORTANT]
+> The following instructions are for running the bot manually. If you are using Docker, you can skip this section. [Bun](https://bun.sh/) is required, so make sure to install it before proceeding.
 
 The project can also be run manually. To do so, first download the project and install the dependencies:
 
@@ -133,10 +136,14 @@ The bot can be controlled using the following commands:
 | `/stop` | Stop the current stream. |
 | `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
 
-_The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/channels` command to see all available channels, and then either navigate from there or use the channel name directly._
+> [!TIP]
+> The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/channels` command to see all available channels, and then either navigate from there or use the channel name directly.
 
 ## Known Issues
 
 If your issue is not listed here and you think it should be, please check the [Issues](https://github.com/zbejas/orbiscast/issues) section. If it is not there, please open a new issue.
 
 - The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.
+
+> [!NOTE]
+> In my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.

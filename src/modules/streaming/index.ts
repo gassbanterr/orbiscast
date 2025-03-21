@@ -237,7 +237,7 @@ export async function startStreaming(channelEntry: ChannelEntry) {
         try {
             await playStream(output, streamer, {
                 type: "go-live",
-                readrateInitialBurst: 1000000,
+                //readrateInitialBurst: 1000000,
             }, abortController.signal);
 
             // Ensure cleanup happens after stream ends normally

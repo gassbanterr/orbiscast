@@ -12,7 +12,10 @@ LABEL org.opencontainers.image.title="Orbiscast"
 
 # Install dependencies
 RUN apk update && \
-    apk add --no-cache curl git unzip ffmpeg bash
+    apk add --no-cache curl git unzip ffmpeg bash && \
+    # Hardware acceleration dependencies
+    apk add --no-cache mesa-dri-gallium
+
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash

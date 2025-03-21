@@ -34,8 +34,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
-# Build compose file
+# Build files
 compose.build.yml
+build
 
 # Data and cache folder
 data

@@ -5,8 +5,9 @@ services:
     image: docker.io/zbejas/orbiscast:latest
     container_name: orbiscast
     restart: unless-stopped
+    # Data is stored in /app/data inside the container
     volumes:
-      - ./data:/app/data # This is where the database and logs are stored
+     - ./data:/app/data
     # If you don't want to use an .env file, you can uncomment and define your variables directly here
     # Don't forget to remove the env_file line below if you do this
     # environment:
@@ -18,3 +19,8 @@ services:
     # ... other required variables, see .env.example and README.md
     env_file:
       - .env
+    # Uncomment the following line if you want to use hardware acceleration (e.g. for transcoding)
+    # This is an example for Intel GPUs, you may need to adjust it for your hardware
+    # https://docs.docker.com/compose/how-tos/gpu-support/
+    # devices:
+     # - /dev/dri:/dev/dri

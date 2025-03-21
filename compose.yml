@@ -19,8 +19,3 @@ services:
     # ... other required variables, see .env.example and README.md
     env_file:
       - .env
-    # Uncomment the following line if you want to use hardware acceleration (e.g. for transcoding)
-    # This is an example for Intel GPUs, you may need to adjust it for your hardware
-    # https://docs.docker.com/compose/how-tos/gpu-support/
-    # devices:
-     # - /dev/dri:/dev/dri

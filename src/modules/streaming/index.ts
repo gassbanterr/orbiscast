@@ -206,7 +206,6 @@ export async function startStreaming(channelEntry: ChannelEntry) {
         const { command, output } = prepareStream(channelEntry.url, {
             noTranscoding: false,
             minimizeLatency: config.MINIMIZE_LATENCY,
-            hardwareAcceleratedDecoding: config.HARDWARE_ACCELERATION,
             bitrateVideo: config.BITRATE_VIDEO,
             bitrateVideoMax: config.BITRATE_VIDEO_MAX,
             videoCodec: Utils.normalizeVideoCodec("H264"),

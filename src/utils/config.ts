@@ -14,6 +14,9 @@ class Config {
     GUILD: string;
     DEBUG: boolean;
     CACHE_DIR: string;
+    MINIMIZE_LATENCY: boolean;
+    BITRATE_VIDEO: number;
+    BITRATE_VIDEO_MAX: number;
 
     constructor() {
         logger.info("Loading environment variables");
@@ -30,6 +33,9 @@ class Config {
         this.GUILD = env.GUILD?.trim() || '0';
         this.DEBUG = env.DEBUG?.trim().toLowerCase() === 'true';
         this.CACHE_DIR = (this.RAM_CACHE ? '/dev/shm/orbiscast' : env.CACHE_DIR?.trim()) || '../cache';
+        this.MINIMIZE_LATENCY = env.MINIMIZE_LATENCY?.trim().toLowerCase() !== 'false';
+        this.BITRATE_VIDEO = parseInt(env.BITRATE_VIDEO?.trim() || '5000');
+        this.BITRATE_VIDEO_MAX = parseInt(env.BITRATE_VIDEO_MAX?.trim() || '7500');
 
         logger.info(`Loaded GUILD ID: ${this.GUILD}`);
 

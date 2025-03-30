@@ -205,9 +205,9 @@ export async function startStreaming(channelEntry: ChannelEntry) {
 
         const { command, output } = prepareStream(channelEntry.url, {
             noTranscoding: false,
-            minimizeLatency: true,
-            bitrateVideo: 5000,
-            bitrateVideoMax: 7500,
+            minimizeLatency: config.MINIMIZE_LATENCY,
+            bitrateVideo: config.BITRATE_VIDEO,
+            bitrateVideoMax: config.BITRATE_VIDEO_MAX,
             videoCodec: Utils.normalizeVideoCodec("H264"),
             h26xPreset: "veryfast",
         }, abortController.signal);
@@ -236,6 +236,7 @@ export async function startStreaming(channelEntry: ChannelEntry) {
         try {
             await playStream(output, streamer, {
                 type: "go-live",
+                //readrateInitialBurst: 1000000,
             }, abortController.signal);
 
             // Ensure cleanup happens after stream ends normally

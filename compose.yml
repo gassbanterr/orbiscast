@@ -5,8 +5,9 @@ services:
     image: docker.io/zbejas/orbiscast:latest
     container_name: orbiscast
     restart: unless-stopped
+    # Data is stored in /app/data inside the container
     volumes:
-      - ./data:/app/data # This is where the database and logs are stored
+     - ./data:/app/data
     # If you don't want to use an .env file, you can uncomment and define your variables directly here
     # Don't forget to remove the env_file line below if you do this
     # environment:

@@ -113,6 +113,9 @@ The application uses the following environment variables, which should be define
 | `DEBUG`            | Enable debug mode.                               | `false`                                  | ✘        |
 | `DEFAULT_STREAM_TIMEOUT` | Default stream timeout (when alone in channel) in minutes.            | `10`                                     | ✘        |
 | `TZ`               | Timezone for the container. Example: `Europe/Ljubljana`                      | `UTC`                                    | ✘        |
+| `MINIMIZE_LATENCY` | Minimize latency for the stream.                 | `true`                                   | ✘        |
+| `BITRATE_VIDEO`    | Video bitrate in Kbps.                           | `5000`                                   | ✘        |
+| `BITRATE_VIDEO_MAX`| Maximum video bitrate in Kbps.                   | `7500`                                   | ✘        |
 
 ### Discord Configuration
 

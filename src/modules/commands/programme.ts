@@ -63,7 +63,7 @@ export async function generateProgrammeList(pageOption: number = 1): Promise<{
     components?: ActionRowBuilder<ButtonBuilder>[]
 }> {
     const channelEntries = await getChannelEntries();
-    const itemsPerPage = 25;
+    const itemsPerPage = 20;
 
     const totalPages = Math.ceil(channelEntries.length / itemsPerPage);
 

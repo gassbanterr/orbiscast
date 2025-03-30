@@ -39,4 +39,5 @@ compose.build.yml
 # Data and cache 
 data
 cache
+build
 

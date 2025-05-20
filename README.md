@@ -106,7 +106,7 @@ The application uses the following environment variables, which should be define
 | Variable           | Description                                      | Example/Default                          | Required |
 |--------------------|--------------------------------------------------|------------------------------------------|----------|
 | `PLAYLIST`         | URL to the M3U playlist.                         | `http://example.com/m3u/playlist.m3u`    | ✔        |
-| `XMLTV`            | URL to the XMLTV guide.                          | `http://example.com/xmltv/guide.xml`     | ✔        |
+| `XMLTV`            | URL to the XMLTV guide. Can be an empty string.  | `http://example.com/xmltv/guide.xml`     | ✔        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `true`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
@@ -134,7 +134,7 @@ The bot can be controlled using the following commands:
 | Command | Description |
 |---------|-------------|
 | `/stream <channe>` | Start streaming the specified channel. |
-| `/programme <channel>` | Show the current programme for the specified channel. If no channel is all channels will be listed. |
+| `/programme <channel>` | Show the current programme for the specified channel. |
 | `/channels <page>` | List all available channels. Page is optional. |
 | `/stop` | Stop the current stream. |
 | `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |

@@ -149,4 +149,4 @@ If your issue is not listed here and you think it should be, please check the [I
 - The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.
 
 > [!NOTE]
-> In my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) as my IPTV provider. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.
+> In my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) and [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) as my IPTV providers. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.

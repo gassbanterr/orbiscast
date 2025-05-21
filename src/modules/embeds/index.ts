@@ -104,7 +104,7 @@ export function createStreamEmbed(
         .setColor('#3fd15e')
         .setTimestamp();
 
-    if (channel.tvg_logo) {
+    if (channel.tvg_logo && !channel.tvg_logo.startsWith('http://')) {
         streamEmbed.setThumbnail(channel.tvg_logo);
     }
 

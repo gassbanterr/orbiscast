@@ -91,7 +91,7 @@ cd orbiscast
 bun install
 ```
 
-Start the bot using:
+Setup the enviroment variables and start the bot by running:
 
 ```bash
 bun run start
@@ -161,6 +161,5 @@ If you encounter any issues, here are some common problems and their solutions:
 
 If you encounter issues not listed here, please open a new [issue](https://github.com/zbejas/orbiscast/issues) with details about your problem.
   
-
 > [!NOTE]
 > In my testing, I've been using tools mentioned in the [System and IPTV Configuration](#system-and-iptv-configuration) tip to sort out the channels. It should work with any M3U or HDHR playlist, but I cannot guarantee it. This tool was not built or tested with a large number of channels, so it may not work as expected if you overload it with data. For any issues, please open a new [issue](https://github.com/zbejas/orbiscast/issues).

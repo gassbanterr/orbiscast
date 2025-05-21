@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { BaseEmbedProcessor } from './base';
 import type { EmbedOptions, EmbedResult } from './types';
 import type { ChannelEntry } from '../../interfaces/iptv';
+import { getLogger } from '../../utils/logger';
 
 /**
  * Processor for creating embeds from IPTV channel data
@@ -27,16 +28,16 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
      */
     protected async generateEmbed(channel: ChannelEntry, options: EmbedOptions): Promise<EmbedResult> {
         const { theme = 'light', title, color = '#3fd15e' } = options;
+        const logger = getLogger();
 
         const embed = new EmbedBuilder()
             .setTitle(title || `📺 ${channel.tvg_name || 'Channel'}`)
             .setColor(color as any)
             .setTimestamp();
 
+        logger.debug(`Logo url: ${channel.tvg_logo}`);
+
         if (channel.tvg_logo && !channel.tvg_logo.startsWith('http://')) {
-            // Ignore self hosted local logos, they are not accessible to Discord
-            // and will cause the embed to fail
-            console.log(`logo: ${channel.tvg_logo}`);
             embed.setThumbnail(channel.tvg_logo);
         }
 

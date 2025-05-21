@@ -33,8 +33,10 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
             .setColor(color as any)
             .setTimestamp();
 
-        // Ignore self hosted local logos, they are not accessible to Discord (http is usually local, sorry)
         if (channel.tvg_logo && !channel.tvg_logo.startsWith('http://')) {
+            // Ignore self hosted local logos, they are not accessible to Discord
+            // and will cause the embed to fail
+            console.log(`logo: ${channel.tvg_logo}`);
             embed.setThumbnail(channel.tvg_logo);
         }
 

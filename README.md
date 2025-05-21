@@ -106,7 +106,7 @@ The application uses the following environment variables, which should be define
 | Variable           | Description                                      | Example/Default                          | Required |
 |--------------------|--------------------------------------------------|------------------------------------------|----------|
 | `PLAYLIST`         | URL to the M3U playlist.                         | `http://example.com/m3u/playlist.m3u`    | ✔        |
-| `XMLTV`            | URL to the XMLTV guide. Can be an empty string.  | `http://example.com/xmltv/guide.xml`     | ✔        |
+| `XMLTV`            | URL to the XMLTV guide.                   | `http://example.com/xmltv/guide.xml`     | ✘        |
 | `REFRESH_IPTV`     | Interval in minutes to refresh the IPTV data.    | `1440`                                   | ✘        |
 | `RAM_CACHE`        | Whether to use RAM for caching.                  | `true`                                  | ✘        |
 | `CACHE_DIR`        | Directory for cache storage.                     | `../cache`                               | ✘        |
@@ -116,6 +116,9 @@ The application uses the following environment variables, which should be define
 | `MINIMIZE_LATENCY` | Minimize latency for the stream.                 | `true`                                   | ✘        |
 | `BITRATE_VIDEO`    | Video bitrate in Kbps.                           | `5000`                                   | ✘        |
 | `BITRATE_VIDEO_MAX`| Maximum video bitrate in Kbps.                   | `7500`                                   | ✘        |
+
+> [!TIP]
+> There is a bunch of IPTV providers online. I recommend using a tool like [Threadfin](https://github.com/Threadfin/Threadfin) or [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) to sort out your IPTV channels. You can find public M3U playlists on sites like [GitHub](https://github.com/iptv-org/iptv). More info on IPTV and can be found [here](https://github.com/iptv-org/awesome-iptv).
 
 ### Discord Configuration
 
@@ -140,13 +143,24 @@ The bot can be controlled using the following commands:
 | `/refresh <type>` | Refresh the specified data. Type can be "all", "channels", or "programme". |
 
 > [!TIP]
-> The available channels will be shown when tab-completing the channel name, but only up to 25 channels will be shown at a time, since Discord limits the number of options in a command. Use the `/channels` command to see all available channels, and then either navigate from there or use the channel name directly.
+> Both `/channels` and `/programme` commands support autocompletion for channel names. However, Discord limits the number of options shown at once to 25. Use the `/channels` or `/programme` command to see all available channels. The bot will show the first 25 channels, and you can use the `page` argument to see more.
 
-## Known Issues
+## Troubleshooting
 
-If your issue is not listed here and you think it should be, please check the [Issues](https://github.com/zbejas/orbiscast/issues) section. If it is not there, please open a new issue.
+If you encounter any issues, here are some common problems and their solutions:
 
-- The streamer hangs if the stream is killed from the source side. I have not yet found a way to detect this, so the only remedy is to restart the bot for now.
+- **Stream freezes or hangs**: If the stream source gets disconnected or the stream is killed from the source side, the bot may hang indefinitely. Currently, there's no automatic detection for this issue, so you'll need to restart the bot.
+
+- **Stream quality issues**: If you're experiencing quality problems, try adjusting the `BITRATE_VIDEO` and `BITRATE_VIDEO_MAX` environment variables to values that work better with your network conditions.
+
+- **High latency**: Enable the `MINIMIZE_LATENCY` option in your environment variables to reduce streaming delay.
+
+- **Missing channels**: Make sure your M3U playlist URL is correct and accessible. You can use the `/refresh channels` command to reload the channel list.
+
+- **Authorization errors**: If the bot can't join voice channels or execute commands, verify that both the bot and user tokens are correct and have the necessary permissions.
+
+If you encounter issues not listed here, please open a new [issue](https://github.com/zbejas/orbiscast/issues) with details about your problem.
+  
 
 > [!NOTE]
-> In my testing, I've been using [Threadfin](https://github.com/Threadfin/Threadfin) and [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) as my IPTV providers. I'm not sure if it works with other providers, but it theoretically should. Also, this tool was not built or tested with a large number of channels in mind, so it may not work as expected if you overload it with data.
+> In my testing, I've been using tools mentioned in the [System and IPTV Configuration](#system-and-iptv-configuration) tip to sort out the channels. It should work with any M3U or HDHR playlist, but I cannot guarantee it. This tool was not built or tested with a large number of channels, so it may not work as expected if you overload it with data. For any issues, please open a new [issue](https://github.com/zbejas/orbiscast/issues).

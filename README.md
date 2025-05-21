@@ -118,7 +118,7 @@ The application uses the following environment variables, which should be define
 | `BITRATE_VIDEO_MAX`| Maximum video bitrate in Kbps.                   | `7500`                                   | ✘        |
 
 > [!TIP]
-> There is a bunch of IPTV providers online. I recommend using a tool like [Threadfin](https://github.com/Threadfin/Threadfin) or [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) to sort out your IPTV channels. You can find public M3U playlists [here](https://github.com/iptv-org/iptv). More info on IPTV and can be found [here](https://github.com/iptv-org/awesome-iptv).
+> There is a bunch of IPTV providers online. I recommend using a tool like [Threadfin](https://github.com/Threadfin/Threadfin) or [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) to sort out your IPTV channels. You can find public M3U playlists [here](https://github.com/iptv-org/iptv). More info on IPTV can be found [here](https://github.com/iptv-org/awesome-iptv).
 
 ### Discord Configuration
 

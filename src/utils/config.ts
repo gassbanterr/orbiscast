@@ -55,7 +55,7 @@ class Config {
      * @returns True if all required variables are set, false otherwise
      */
     private validateEnvVars(): boolean {
-        const requiredVars = ['PLAYLIST', 'XMLTV', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD'];
+        const requiredVars = ['PLAYLIST', 'DISCORD_BOT_TOKEN', 'DISCORD_USER_TOKEN', 'GUILD'];
         let allVarsSet = true;
 
         requiredVars.forEach(varName => {

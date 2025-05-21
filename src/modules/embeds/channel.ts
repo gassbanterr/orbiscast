@@ -25,7 +25,7 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
      * @param options - Customization options for the embed
      * @returns Generated embed result
      */
-    protected generateEmbed(channel: ChannelEntry, options: EmbedOptions): EmbedResult {
+    protected async generateEmbed(channel: ChannelEntry, options: EmbedOptions): Promise<EmbedResult> {
         const { theme = 'light', title, color = '#3fd15e' } = options;
 
         const embed = new EmbedBuilder()
@@ -34,7 +34,24 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
             .setTimestamp();
 
         if (channel.tvg_logo) {
-            embed.setThumbnail(channel.tvg_logo);
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 250);
+                const response = await fetch(channel.tvg_logo, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    embed.setThumbnail(channel.tvg_logo);
+                } else {
+                    console.warn(`Logo URL for ${channel.tvg_name} returned status ${response.status}: ${channel.tvg_logo}`);
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') {
+                    console.warn(`Timeout fetching logo URL for ${channel.tvg_name}: ${channel.tvg_logo}`);
+                } else {
+                    console.warn(`Failed to fetch logo URL for ${channel.tvg_name}: ${channel.tvg_logo}`, error);
+                }
+            }
         }
 
         embed.addFields(

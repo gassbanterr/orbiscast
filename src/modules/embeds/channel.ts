@@ -33,29 +33,9 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
             .setColor(color as any)
             .setTimestamp();
 
-        if (channel.tvg_logo) {
-            try {
-                new URL(channel.tvg_logo);
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 250);
-                const response = await fetch(channel.tvg_logo, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    embed.setThumbnail(channel.tvg_logo);
-                } else {
-                    console.warn(`Logo URL for ${channel.tvg_name} returned status ${response.status}: ${channel.tvg_logo}`);
-                }
-            } catch (error) {
-                if (error instanceof TypeError) { // Catch URL format errors
-                    console.warn(`Invalid logo URL format for ${channel.tvg_name}: ${channel.tvg_logo}`);
-                } else if (error instanceof Error && error.name === 'AbortError') {
-                    console.warn(`Timeout fetching logo URL for ${channel.tvg_name}: ${channel.tvg_logo}`);
-                } else {
-                    console.warn(`Failed to fetch or validate logo URL for ${channel.tvg_name}: ${channel.tvg_logo}`, error);
-                }
-            }
+        // Ignore self hosted local logos, they are not accessible to Discord (http is usually local, sorry)
+        if (channel.tvg_logo && !channel.tvg_logo.startsWith('http://')) {
+            embed.setThumbnail(channel.tvg_logo);
         }
 
         embed.addFields(

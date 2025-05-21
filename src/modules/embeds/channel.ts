@@ -33,7 +33,7 @@ export class ChannelEmbedProcessor extends BaseEmbedProcessor<ChannelEntry> {
             .setColor(color as any)
             .setTimestamp();
 
-        if (channel.tvg_logo) {
+        if (channel.tvg_logo && !channel.tvg_logo.startsWith('http://')) {
             embed.setThumbnail(channel.tvg_logo);
         }
 

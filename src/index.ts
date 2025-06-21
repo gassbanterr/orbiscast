@@ -23,3 +23,14 @@ async function startOrbisCast() {
 }
 
 startOrbisCast();
+
+Bun.serve({
+    port: 7860,
+    hostname: "0.0.0.0",
+    fetch(req) {
+        return new Response("✅ OrbisCast is running and connected to Discord.", {
+            status: 200,
+            headers: { "Content-Type": "text/plain" },
+        });
+    },
+});
